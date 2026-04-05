@@ -742,7 +742,7 @@
       <label class="form-label">שם משתמש</label>
       <input class="form-input" id="onboard-username" placeholder="לדוגמה: יהודה" style="font-size:18px;text-align:center;" maxlength="20">
     </div>
-    <button class="submit-btn" onclick="submitOnboarding()">המשך ←</button>
+    <button class="submit-btn" id="btn-submit-onboarding">המשך ←</button>
   </div>
 </div>
 
@@ -1286,6 +1286,23 @@ document.addEventListener('DOMContentLoaded', () => {
   if (dBtn) dBtn.addEventListener('click', () => {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('onboarding-screen').style.display = 'flex';
+  });
+
+  const obBtn = document.getElementById('btn-submit-onboarding');
+  if (obBtn) obBtn.addEventListener('click', () => {
+    const name = document.getElementById('onboard-username').value.trim();
+    if (!name) { alert('נא להזין שם משתמש'); return; }
+    const colors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
+    const color = colors[window.state.members.length % colors.length];
+    window.state.user = { name, email: window._firebaseUser?.email || 'demo@app.com', initials: name[0].toUpperCase(), color };
+    if (!window.state.members.find(m => m.name === name)) {
+      window.state.members.push({ name, initials: name[0].toUpperCase(), color, role: window.state.members.length === 0 ? 'מנהל' : 'חבר' });
+    }
+    document.getElementById('onboarding-screen').style.display = 'none';
+    document.getElementById('tutorial-screen').style.display = 'block';
+    window._tutorialStep = 0;
+    if (window.renderTutorialDots) window.renderTutorialDots();
+    if (window.showTutorialStep) window.showTutorialStep(0);
   });
 });
 
@@ -2404,16 +2421,19 @@ function editBank(id) { showNotification('עריכה תהיה זמינה בגר�
 
 // ============ TUTORIAL ============
 let _tutorialStep = 0;
+window._tutorialStep = 0;
 const TUTORIAL_TOTAL = 6;
 
-function startTutorial() {
+window.startTutorial = function startTutorial() {
   _tutorialStep = 0;
+  window._tutorialStep = 0;
   document.getElementById('tutorial-screen').style.display = 'block';
+  document.getElementById('app').style.display = 'none';
   renderTutorialDots();
   showTutorialStep(0);
 }
 
-function finishTutorial() {
+window.finishTutorial = function finishTutorial() {
   document.getElementById('tutorial-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   if (state.user) {
@@ -2425,14 +2445,15 @@ function finishTutorial() {
   saveData();
 }
 
-function tutorialStep(dir) {
+window.tutorialStep = function tutorialStep(dir) {
   _tutorialStep += dir;
+  window._tutorialStep = _tutorialStep;
   if (_tutorialStep < 0) _tutorialStep = 0;
-  if (_tutorialStep >= TUTORIAL_TOTAL) { finishTutorial(); return; }
+  if (_tutorialStep >= TUTORIAL_TOTAL) { window.finishTutorial(); return; }
   showTutorialStep(_tutorialStep);
 }
 
-function showTutorialStep(n) {
+window.showTutorialStep = function showTutorialStep(n) {
   for (let i = 0; i < TUTORIAL_TOTAL; i++) {
     const el = document.getElementById('tstep-' + i);
     if (el) el.style.display = i === n ? 'block' : 'none';
@@ -2445,7 +2466,7 @@ function showTutorialStep(n) {
   if (next && n === TUTORIAL_TOTAL - 1) { next.onclick = finishTutorial; } else { next.onclick = () => tutorialStep(1); }
 }
 
-function renderTutorialDots() {
+window.renderTutorialDots = function renderTutorialDots() {
   const container = document.getElementById('tutorial-dots');
   if (!container) return;
   container.innerHTML = Array.from({length: TUTORIAL_TOTAL}, (_, i) =>
