@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="תקציב">
+<link rel="manifest" href="manifest.json">
+<title>תקציב משפחתי</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161920;
+    --bg3: #1e2230;
+    --card: #1a1d27;
+    --card2: #22263a;
+    --border: #2a2f45;
+    --text: #e8eaf6;
+    --text2: #8b92b8;
+    --text3: #555c7a;
+    --accent: #6c63ff;
+    --accent2: #4ecdc4;
+    --green: #2ecc71;
+    --yellow: #f39c12;
+    --orange: #e67e22;
+    --red: #e74c3c;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* AUTH SCREEN */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(108,99,255,0.15) 0%, transparent 70%);
+  }
+
+  .auth-logo {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+
+  .auth-title {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #6c63ff, #4ecdc4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .auth-sub {
+    color: var(--text2);
+    margin-bottom: 48px;
+    font-size: 15px;
+  }
+
+  .auth-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .google-btn {
+    width: 100%;
+    padding: 14px;
+    background: white;
+    color: #333;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    font-family: 'Heebo', sans-serif;
+  }
+
+  .google-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
+
+  .auth-divider {
+    text-align: center;
+    color: var(--text3);
+    margin: 20px 0;
+    font-size: 13px;
+    position: relative;
+  }
+
+  .auth-divider::before, .auth-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: var(--border);
+  }
+  .auth-divider::before { right: 0; }
+  .auth-divider::after { left: 0; }
+
+  .demo-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Heebo', sans-serif;
+  }
+  .demo-btn:hover { background: #5a52e0; transform: translateY(-1px); }
+
+  /* APP LAYOUT */
+  #app { display: none; min-height: 100vh; padding-bottom: 80px; }
+
+  /* TOP BAR */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,17,23,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topbar-title {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .topbar-workspace {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(22,25,32,0.97);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text3);
+    font-size: 11px;
+  }
+
+  .nav-item.active { color: var(--accent); }
+  .nav-item svg { width: 22px; height: 22px; }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    color: var(--text2);
+    font-weight: 500;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* BALANCE CARD */
+  .balance-main {
+    background: linear-gradient(135deg, #1a1d27, #22263a);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .balance-main::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(108,99,255,0.2), transparent);
+    border-radius: 50%;
+  }
+
+  .balance-label { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+  .balance-amount { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+  .balance-month { font-size: 13px; color: var(--text2); }
+
+  .balance-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .balance-item {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  .balance-item-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .balance-item-amount { font-size: 18px; font-weight: 700; }
+  .income-color { color: var(--green); }
+  .expense-color { color: var(--red); }
+
+  /* BANK CARDS */
+  .bank-cards { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .bank-cards::-webkit-scrollbar { display: none; }
+
+  .bank-card {
+    min-width: 160px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .bank-card.green { border-color: rgba(46,204,113,0.4); }
+  .bank-card.yellow { border-color: rgba(243,156,18,0.4); }
+  .bank-card.orange { border-color: rgba(230,126,34,0.4); }
+  .bank-card.red { border-color: rgba(231,76,60,0.4); }
+
+  .bank-card-name { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+  .bank-card-balance { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .bank-card-info { font-size: 11px; color: var(--text2); }
+  .bank-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 4px; }
+
+  /* TRANSACTIONS */
+  .tx-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .tx-item:last-child { border-bottom: none; }
+
+  .tx-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-name { font-size: 14px; font-weight: 500; }
+  .tx-details { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-amount { font-size: 15px; font-weight: 600; text-align: left; }
+  .tx-amount.neg { color: var(--red); }
+  .tx-amount.pos { color: var(--green); }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 88px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.5);
+    transition: all 0.2s;
+    z-index: 99;
+  }
+  .fab:hover { transform: translateX(-50%) scale(1.1); }
+  .fab svg { width: 24px; height: 24px; color: white; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal {
+    background: var(--bg2);
+    border-radius: var(--radius) var(--radius) 0 0;
+    border: 1px solid var(--border);
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 24px;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; color: var(--text2); margin-bottom: 6px; display: block; }
+
+  .form-input, .form-select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Heebo', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--bg3); }
+
+  .type-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .type-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Heebo', sans-serif;
+  }
+
+  .type-btn.active-expense { border-color: var(--red); color: var(--red); background: rgba(231,76,60,0.1); }
+  .type-btn.active-income { border-color: var(--green); color: var(--green); background: rgba(46,204,113,0.1); }
+  .type-btn.active-transfer { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.1); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Heebo', sans-serif;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+  .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* CHART */
+  .chart-container { position: relative; height: 180px; margin-top: 8px; }
+  
+  canvas { width: 100% !important; }
+
+  /* CATEGORIES */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .cat-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cat-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cat-info { flex: 1; min-width: 0; }
+  .cat-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cat-amount { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* CREDIT CARDS */
+  .credit-card-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .credit-card-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .credit-card-name { font-size: 14px; font-weight: 500; }
+  .credit-card-info { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .credit-card-amount { font-size: 16px; font-weight: 700; color: var(--red); }
+
+  /* UPCOMING */
+  .upcoming-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .upcoming-item:last-child { border-bottom: none; }
+
+  .upcoming-date {
+    width: 40px;
+    height: 40px;
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .upcoming-date-day { font-size: 16px; font-weight: 700; line-height: 1; }
+  .upcoming-date-month { font-size: 10px; color: var(--text2); }
+
+  .upcoming-info { flex: 1; }
+  .upcoming-name { font-size: 14px; font-weight: 500; }
+  .upcoming-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .upcoming-amount { font-size: 15px; font-weight: 600; color: var(--red); }
+
+  /* SETTINGS */
+  .settings-section { margin-bottom: 24px; }
+  .settings-title { font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+  .settings-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .settings-item:hover { background: var(--card2); }
+
+  .settings-item-left { display: flex; align-items: center; gap: 12px; }
+  .settings-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .settings-item-name { font-size: 14px; font-weight: 500; }
+  .settings-item-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .settings-arrow { color: var(--text3); font-size: 16px; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title { font-size: 15px; font-weight: 600; }
+  .section-action { font-size: 13px; color: var(--accent); cursor: pointer; }
+
+  /* MONTH SELECTOR */
+  .month-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .month-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .month-btn:hover { background: var(--card2); }
+  .month-label { flex: 1; text-align: center; font-size: 16px; font-weight: 600; }
+
+  /* APPROVE MODAL */
+  .approve-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+  }
+
+  .approve-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .approve-check.checked { background: var(--accent); border-color: var(--accent); }
+
+  .approve-info { flex: 1; }
+  .approve-name { font-size: 14px; font-weight: 500; }
+  .approve-amount { font-size: 13px; color: var(--text2); }
+  .approve-change { font-size: 12px; color: var(--accent2); cursor: pointer; }
+
+  /* NOTIFICATION BANNER */
+  .notification {
+    position: fixed;
+    top: 70px;
+    left: 16px;
+    right: 16px;
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .notification-icon { font-size: 20px; }
+  .notification-text { flex: 1; font-size: 14px; }
+  .notification-close { color: var(--text3); cursor: pointer; font-size: 18px; }
+
+  /* MISC */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-green { background: rgba(46,204,113,0.15); color: var(--green); }
+  .badge-red { background: rgba(231,76,60,0.15); color: var(--red); }
+  .badge-accent { background: rgba(108,99,255,0.15); color: var(--accent); }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--text2);
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 14px; }
+
+  .color-picker-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .color-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border: 3px solid transparent;
+  }
+  .color-dot:hover { transform: scale(1.2); }
+  .color-dot.selected { border-color: white; }
+
+  .members-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .member-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--bg3);
+    border-radius: 20px;
+    font-size: 13px;
+  }
+
+  .member-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo">💰</div>
+  <div class="auth-title">תקציב משפחתי</div>
+  <div class="auth-sub">נהל את הכסף שלך בחכמה</div>
+  <div class="auth-card">
+    <button class="google-btn" onclick="loginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.31z"/></svg>
+      כניסה עם Google
+    </button>
+    <div class="auth-divider">או</div>
+    <button class="demo-btn" onclick="loginDemo()">🚀 כניסת דמו</button>
+    <p style="text-align:center;color:var(--text3);font-size:12px;margin-top:16px;">בלחיצה על כניסה אתה מסכים לתנאי השימוש</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">💰 תקציב משפחתי</div>
+      <div class="topbar-workspace" id="workspace-name">סביבת העבודה של יהודה</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="position:relative;cursor:pointer" onclick="showApproveModal()">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div id="notif-badge" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--red);border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;">3</div>
+      </div>
+      <div class="avatar" onclick="showPage('settings')">י</div>
+    </div>
+  </div>
+
+  <!-- PAGES -->
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="month-selector">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="month-label" id="month-label">אפריל 2026</div>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+
+    <!-- BALANCE MAIN -->
+    <div class="balance-main">
+      <div class="balance-label">מאזן חודשי</div>
+      <div class="balance-amount" id="dash-balance">+ ₪ 4,200</div>
+      <div class="balance-month">אפריל 2026</div>
+      <div class="balance-row">
+        <div class="balance-item">
+          <div class="balance-item-label">הכנסות</div>
+          <div class="balance-item-amount income-color" id="dash-income">₪ 32,741</div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-item-label">הוצאות</div>
+          <div class="balance-item-amount expense-color" id="dash-expense">₪ 28,541</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANK ACCOUNTS -->
+    <div class="section-header">
+      <div class="section-title">חשבונות בנק</div>
+      <div class="section-action" onclick="showAddBankModal()">+ הוסף</div>
+    </div>
+    <div class="bank-cards" id="bank-cards-container">
+      <!-- rendered by JS -->
+    </div>
+
+    <!-- CREDIT CARDS -->
+    <div style="margin-top:20px;">
+      <div class="section-header">
+        <div class="section-title">כרטיסי אשראי</div>
+        <div class="section-action" onclick="showAddCreditModal()">+ הוסף</div>
+      </div>
+      <div class="credit-card-list" id="credit-cards-container"></div>
+    </div>
+
+    <!-- UPCOMING -->
+    <div style="margin-top:20px;">
+      <div class="section-header">
+        <div class="section-title">חיובים קרובים</div>
+        <div class="section-action" onclick="showPage('transactions')">הכל</div>
+      </div>
+      <div class="card" style="padding:8px 16px;">
+        <div id="upcoming-container"></div>
+      </div>
+    </div>
+
+    <!-- RECENT TX -->
+    <div style="margin-top:20px;">
+      <div class="section-header">
+        <div class="section-title">פעולות אחרונות</div>
+        <div class="section-action" onclick="showPage('transactions')">הכל</div>
+      </div>
+      <div class="card" style="padding:8px 16px;" id="recent-tx-container"></div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="page" id="page-transactions">
+    <div class="month-selector">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="month-label" id="month-label-tx">אפריל 2026</div>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="card" style="padding:8px 16px;" id="all-tx-container"></div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="page" id="page-analytics">
+    <div class="month-selector">
+      <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="month-label" id="month-label-an">אפריל 2026</div>
+      <button class="month-btn" onclick="changeMonth(1)">›</button>
+    </div>
+
+    <!-- YEARLY CHART -->
+    <div class="card">
+      <div class="card-title">הכנסות מול הוצאות – 2026</div>
+      <div class="chart-container">
+        <canvas id="yearlyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- CATEGORY BREAKDOWN -->
+    <div class="card">
+      <div class="card-title">פירוט לפי קטגוריה</div>
+      <div class="cat-grid" id="cat-breakdown"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div style="font-size:20px;font-weight:700;margin-bottom:20px;">הגדרות</div>
+
+    <!-- WORKSPACE -->
+    <div class="settings-section">
+      <div class="settings-title">סביבת עבודה</div>
+      <div class="card" style="margin-bottom:0;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div class="avatar" style="width:48px;height:48px;font-size:18px;">י</div>
+          <div>
+            <div style="font-weight:600;">יהודה רוטשטיין</div>
+            <div style="font-size:13px;color:var(--text2);">מנהל</div>
+          </div>
+        </div>
+        <div class="members-row" id="members-list">
+          <div class="member-chip"><div class="member-avatar">י</div> יהודה</div>
+          <div class="member-chip"><div class="member-avatar" style="background:linear-gradient(135deg,#e74c3c,#e91e63)">ח</div> חיני</div>
+        </div>
+        <button style="width:100%;margin-top:12px;padding:10px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;" onclick="showInviteModal()">+ הזמן בן/בת זוג</button>
+      </div>
+    </div>
+
+    <!-- BANKS -->
+    <div class="settings-section">
+      <div class="settings-title">חשבונות בנק</div>
+      <div id="settings-banks"></div>
+      <button style="width:100%;padding:10px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;" onclick="showAddBankModal()">+ הוסף חשבון בנק</button>
+    </div>
+
+    <!-- CREDIT CARDS SETTINGS -->
+    <div class="settings-section">
+      <div class="settings-title">כרטיסי אשראי</div>
+      <div id="settings-credits"></div>
+      <button style="width:100%;padding:10px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;" onclick="showAddCreditModal()">+ הוסף כרטיס</button>
+    </div>
+
+    <!-- FIXED EXPENSES -->
+    <div class="settings-section">
+      <div class="settings-title">הוצאות קבועות</div>
+      <div id="settings-fixed"></div>
+      <button style="width:100%;padding:10px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;" onclick="showAddFixedModal()">+ הוסף הוצאה קבועה</button>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="settings-section">
+      <div class="settings-title">קטגוריות הוצאות</div>
+      <div id="settings-cats"></div>
+      <button style="width:100%;padding:10px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;" onclick="showAddCatModal()">+ הוסף קטגוריה</button>
+    </div>
+
+    <!-- INCOME CATEGORIES -->
+    <div class="settings-section">
+      <div class="settings-title">קטגוריות הכנסות</div>
+      <div id="settings-income-cats"></div>
+      <button style="width:100%;padding:10px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;" onclick="showAddIncomeCatModal()">+ הוסף קטגוריה</button>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="settings-section">
+      <div class="settings-title">התראות</div>
+      <div class="settings-item" onclick="showNotifSettings()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(108,99,255,0.15)">🔔</div>
+          <div>
+            <div class="settings-item-name">התראות חיוב</div>
+            <div class="settings-item-sub">3 ימים לפני חיוב קבוע</div>
+          </div>
+        </div>
+        <div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="showDailyNotif()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(78,205,196,0.15)">🌙</div>
+          <div>
+            <div class="settings-item-name">תזכורת יומית</div>
+            <div class="settings-item-sub">בסוף יום – האם הוצאת היום?</div>
+          </div>
+        </div>
+        <div class="settings-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- LOGOUT -->
+    <div class="settings-section">
+      <button style="width:100%;padding:14px;background:transparent;border:1px solid rgba(231,76,60,0.3);border-radius:var(--radius-sm);color:var(--red);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;font-weight:600;" onclick="logout()">יציאה מהחשבון</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      דשבורד
+    </div>
+    <div class="nav-item" id="nav-transactions" onclick="showPage('transactions')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      פעולות
+    </div>
+    <div class="nav-item" id="nav-analytics" onclick="showPage('analytics')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      ניתוח
+    </div>
+    <div class="nav-item" id="nav-settings" onclick="showPage('settings')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      הגדרות
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" onclick="showAddTxModal()">
+    <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</div>
+
+<!-- MODALS -->
+<div id="modal-container"></div>
+<div id="notification-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+
+// ============ STATE ============
+let state = {
+  user: null,
+  currentMonth: new Date().getMonth(),
+  currentYear: new Date().getFullYear(),
+  banks: [
+    { id: 1, name: 'לאומי', balance: 8200, color: '#2ecc71' },
+    { id: 2, name: 'דיסקונט', balance: 3400, color: '#f39c12' },
+    { id: 3, name: 'מרכנתיל', balance: 26400, color: '#6c63ff' },
+    { id: 4, name: 'מזומן', balance: 600, color: '#4ecdc4' },
+  ],
+  creditCards: [
+    { id: 1, name: 'ויזה לאומי', chargeDate: 10, bankId: 1, spent: 3240 },
+    { id: 2, name: 'מאסטרקארד דיסקונט', chargeDate: 15, bankId: 2, spent: 5180 },
+    { id: 3, name: 'מקס', chargeDate: 20, bankId: 2, spent: 2505 },
+  ],
+  categories: [
+    { id: 1, name: 'משכנתא והלוואות', color: '#e74c3c', icon: '🏠' },
+    { id: 2, name: 'מזון ומכולת', color: '#27ae60', icon: '🛒' },
+    { id: 3, name: 'חשבונות', color: '#3498db', icon: '💡' },
+    { id: 4, name: 'תחבורה', color: '#9b59b6', icon: '🚗' },
+    { id: 5, name: 'בילויים', color: '#e67e22', icon: '🎉' },
+    { id: 6, name: 'ביגוד', color: '#1abc9c', icon: '👗' },
+    { id: 7, name: 'בריאות', color: '#e91e63', icon: '💊' },
+    { id: 8, name: 'חינוך', color: '#f39c12', icon: '📚' },
+    { id: 9, name: 'השקעות נדלן', color: '#795548', icon: '🏗️' },
+    { id: 10, name: 'אחר', color: '#607d8b', icon: '📦' },
+  ],
+  incomeCategories: [
+    { id: 1, name: 'משכורת', color: '#27ae60', icon: '💼' },
+    { id: 2, name: 'שכירויות', color: '#6c63ff', icon: '🏘️' },
+    { id: 3, name: 'קצבאות', color: '#4ecdc4', icon: '👶' },
+    { id: 4, name: 'אחר', color: '#607d8b', icon: '➕' },
+  ],
+  fixedExpenses: [
+    { id: 1, name: 'משכנתא לאומי', amount: 3496, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 1 },
+    { id: 2, name: 'משכנתא מרכנתיל', amount: 5777, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 3 },
+    { id: 3, name: 'הלוואה מרכנתיל', amount: 1934, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 3 },
+    { id: 4, name: 'הלוואה דיסקונט', amount: 1699, dayOfMonth: 15, catId: 1, paymentMethod: 'bank', bankId: 2 },
+    { id: 5, name: 'הלוואה מקס', amount: 2505, dayOfMonth: 20, catId: 1, paymentMethod: 'credit', creditId: 3 },
+    { id: 6, name: 'שכירות', amount: 3850, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 2 },
+    { id: 7, name: 'מטפלת', amount: 3000, dayOfMonth: 5, catId: 4, paymentMethod: 'bank', bankId: 2 },
+    { id: 8, name: 'לימודים', amount: 1150, dayOfMonth: 10, catId: 8, paymentMethod: 'bank', bankId: 2 },
+  ],
+  transactions: [
+    { id: 1, type: 'income', date: '2026-04-01', name: 'משכורת יהודה', amount: 9000, catId: 1, bankId: 1, note: '' },
+    { id: 2, type: 'income', date: '2026-04-03', name: 'משכורת חיני', amount: 14429, catId: 1, bankId: 2, note: '' },
+    { id: 3, type: 'income', date: '2026-04-01', name: 'שכירויות', amount: 9200, catId: 2, bankId: 3, note: '' },
+    { id: 4, type: 'expense', date: '2026-04-02', name: 'שופרסל', amount: 420, catId: 2, paymentMethod: 'credit', creditId: 2, note: 'קניות שבועיות' },
+    { id: 5, type: 'expense', date: '2026-04-03', name: 'חשמל', amount: 675, catId: 3, paymentMethod: 'bank', bankId: 2, note: '' },
+    { id: 6, type: 'expense', date: '2026-04-04', name: 'מסעדה', amount: 280, catId: 5, paymentMethod: 'credit', creditId: 1, note: 'ארוחת ערב' },
+  ],
+  notifDaysBefore: 3,
+  dailyReminderTime: '21:00',
+  approvalMode: 'all', // 'all' or 'one'
+};
+
+// ============ AUTH ============
+function loginGoogle() {
+  showNotification('🔒 Google Login יחובר ב-production', 'info');
+  loginDemo();
+}
+
+function loginDemo() {
+  state.user = { name: 'יהודה רוטשטיין', email: 'demo@tripease.app', initials: 'י' };
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+}
+
+function logout() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ============ INIT ============
+function initApp() {
+  renderBankCards();
+  renderCreditCards();
+  renderUpcoming();
+  renderRecentTx();
+  renderSettings();
+  updateBalance();
+  setTimeout(renderYearlyChart, 100);
+  setTimeout(() => showApproveNotification(), 2000);
+}
+
+// ============ NAVIGATION ============
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  if (page === 'transactions') renderAllTx();
+  if (page === 'analytics') { renderCatBreakdown(); setTimeout(renderYearlyChart, 100); }
+}
+
+// ============ MONTHS ============
+const MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+function changeMonth(dir) {
+  state.currentMonth += dir;
+  if (state.currentMonth < 0) { state.currentMonth = 11; state.currentYear--; }
+  if (state.currentMonth > 11) { state.currentMonth = 0; state.currentYear++; }
+  const label = MONTHS[state.currentMonth] + ' ' + state.currentYear;
+  ['month-label','month-label-tx','month-label-an'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+  updateBalance();
+  renderRecentTx();
+  renderAllTx();
+  renderCatBreakdown();
+}
+
+// ============ BALANCE ============
+function updateBalance() {
+  const txs = getMonthTxs();
+  const income = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const balance = income - expense;
+  document.getElementById('dash-income').textContent = '₪ ' + income.toLocaleString();
+  document.getElementById('dash-expense').textContent = '₪ ' + expense.toLocaleString();
+  const el = document.getElementById('dash-balance');
+  el.textContent = (balance >= 0 ? '+ ₪ ' : '- ₪ ') + Math.abs(balance).toLocaleString();
+  el.style.color = balance >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+function getMonthTxs() {
+  return state.transactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === state.currentMonth && d.getFullYear() === state.currentYear;
+  });
+}
+
+// ============ BANK STATUS ============
+function getBankStatus(bank) {
+  const today = new Date();
+  const todayDay = today.getDate();
+  const in5 = todayDay + 5;
+  let upcoming = 0;
+  state.fixedExpenses.forEach(fe => {
+    if (fe.paymentMethod === 'bank' && fe.bankId === bank.id && fe.dayOfMonth >= todayDay && fe.dayOfMonth <= in5) {
+      upcoming += fe.amount;
+    }
+  });
+  state.creditCards.forEach(cc => {
+    if (cc.bankId === bank.id && cc.chargeDate >= todayDay && cc.chargeDate <= in5) {
+      upcoming += cc.spent;
+    }
+  });
+  const remaining = bank.balance - upcoming;
+  if (remaining >= 2500) return { cls: 'green', dot: '#2ecc71', upcoming };
+  if (remaining >= 500) return { cls: 'yellow', dot: '#f39c12', upcoming };
+  if (remaining >= 0) return { cls: 'orange', dot: '#e67e22', upcoming };
+  return { cls: 'red', dot: '#e74c3c', upcoming };
+}
+
+function renderBankCards() {
+  const container = document.getElementById('bank-cards-container');
+  container.innerHTML = state.banks.map(bank => {
+    const status = getBankStatus(bank);
+    return `<div class="bank-card ${status.cls}" onclick="showBankDetail(${bank.id})">
+      <div class="bank-card-name">${bank.name}</div>
+      <div class="bank-card-balance">₪ ${bank.balance.toLocaleString()}</div>
+      <div class="bank-card-info">
+        <span class="bank-status-dot" style="background:${status.dot}"></span>
+        יורד ב-5 ימים: ₪${status.upcoming.toLocaleString()}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCreditCards() {
+  const container = document.getElementById('credit-cards-container');
+  container.innerHTML = state.creditCards.map(cc => {
+    const bank = state.banks.find(b => b.id === cc.bankId);
+    return `<div class="credit-card-item">
+      <div>
+        <div class="credit-card-name">💳 ${cc.name}</div>
+        <div class="credit-card-info">יורד ב-${cc.chargeDate} לחודש • ${bank ? bank.name : ''}</div>
+      </div>
+      <div class="credit-card-amount">₪ ${cc.spent.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============ UPCOMING ============
+function renderUpcoming() {
+  const today = new Date();
+  const container = document.getElementById('upcoming-container');
+  const items = state.fixedExpenses
+    .map(fe => ({ ...fe, daysLeft: fe.dayOfMonth - today.getDate() }))
+    .filter(fe => fe.daysLeft >= 0 && fe.daysLeft <= 10)
+    .sort((a,b) => a.daysLeft - b.daysLeft);
+
+  if (!items.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">אין חיובים קרובים</div></div>';
+    return;
+  }
+
+  container.innerHTML = items.map(fe => {
+    const cat = state.categories.find(c => c.id === fe.catId) || {};
+    return `<div class="upcoming-item">
+      <div class="upcoming-date">
+        <div class="upcoming-date-day">${fe.dayOfMonth}</div>
+        <div class="upcoming-date-month">${MONTHS[state.currentMonth].slice(0,3)}</div>
+      </div>
+      <div class="upcoming-info">
+        <div class="upcoming-name">${fe.name}</div>
+        <div class="upcoming-sub">${cat.icon || ''} ${cat.name || ''}</div>
+      </div>
+      <div class="upcoming-amount">₪ ${fe.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============ TRANSACTIONS ============
+function renderRecentTx() {
+  const txs = getMonthTxs().slice(-5).reverse();
+  renderTxList(txs, 'recent-tx-container');
+}
+
+function renderAllTx() {
+  const txs = getMonthTxs().reverse();
+  renderTxList(txs, 'all-tx-container');
+}
+
+function renderTxList(txs, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!txs.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">אין פעולות החודש</div></div>';
+    return;
+  }
+  container.innerHTML = txs.map(tx => {
+    const isIncome = tx.type === 'income';
+    const cat = (isIncome ? state.incomeCategories : state.categories).find(c => c.id === tx.catId) || {};
+    const sign = isIncome ? '+' : '-';
+    const cls = isIncome ? 'pos' : 'neg';
+    const d = new Date(tx.date);
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${cat.color || '#555'}22">${cat.icon || '💰'}</div>
+      <div class="tx-info">
+        <div class="tx-name">${tx.name}</div>
+        <div class="tx-details">${d.getDate()}/${d.getMonth()+1} ${tx.note ? '• ' + tx.note : ''}</div>
+      </div>
+      <div class="tx-amount ${cls}">${sign} ₪${tx.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============ CHART ============
+let yearlyChartInstance = null;
+
+function renderYearlyChart() {
+  const canvas = document.getElementById('yearlyChart');
+  if (!canvas) return;
+  if (yearlyChartInstance) yearlyChartInstance.destroy();
+
+  const incomeData = [32000, 31500, 33000, 32741, 0, 0, 0, 0, 0, 0, 0, 0];
+  const expenseData = [28000, 29000, 27500, 28541, 0, 0, 0, 0, 0, 0, 0, 0];
+  const months = MONTHS.map(m => m.slice(0,3));
+
+  yearlyChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'הכנסות', data: incomeData, backgroundColor: 'rgba(46,204,113,0.7)', borderRadius: 6 },
+        { label: 'הוצאות', data: expenseData, backgroundColor: 'rgba(231,76,60,0.7)', borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8b92b8', font: { family: 'Heebo' } } } },
+      scales: {
+        x: { ticks: { color: '#555c7a', font: { family: 'Heebo', size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#555c7a', font: { family: 'Heebo', size: 10 }, callback: v => '₪' + (v/1000).toFixed(0) + 'K' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+}
+
+// ============ CATEGORY BREAKDOWN ============
+function renderCatBreakdown() {
+  const txs = getMonthTxs().filter(t => t.type === 'expense');
+  const totals = {};
+  txs.forEach(t => { totals[t.catId] = (totals[t.catId] || 0) + t.amount; });
+  const container = document.getElementById('cat-breakdown');
+  if (!container) return;
+  const items = state.categories.map(cat => ({ cat, total: totals[cat.id] || 0 })).filter(i => i.total > 0);
+  if (!items.length) {
+    container.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:20px;color:var(--text2)">אין נתונים</div>';
+    return;
+  }
+  container.innerHTML = items.map(({ cat, total }) =>
+    `<div class="cat-item">
+      <div class="cat-dot" style="background:${cat.color}"></div>
+      <div class="cat-info">
+        <div class="cat-name">${cat.icon} ${cat.name}</div>
+        <div class="cat-amount">₪ ${total.toLocaleString()}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+// ============ SETTINGS RENDER ============
+function renderSettings() {
+  // Banks
+  document.getElementById('settings-banks').innerHTML = state.banks.map(b =>
+    `<div class="settings-item">
+      <div class="settings-item-left">
+        <div class="settings-icon" style="background:${b.color}22;font-size:20px">🏦</div>
+        <div>
+          <div class="settings-item-name">${b.name}</div>
+          <div class="settings-item-sub">יתרה: ₪${b.balance.toLocaleString()}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="color:var(--text3);font-size:13px;cursor:pointer" onclick="editBank(${b.id})">עריכה</span>
+        <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteBank(${b.id})">מחק</span>
+      </div>
+    </div>`
+  ).join('');
+
+  // Credits
+  document.getElementById('settings-credits').innerHTML = state.creditCards.map(cc => {
+    const bank = state.banks.find(b => b.id === cc.bankId);
+    return `<div class="settings-item">
+      <div class="settings-item-left">
+        <div class="settings-icon" style="background:rgba(108,99,255,0.15)">💳</div>
+        <div>
+          <div class="settings-item-name">${cc.name}</div>
+          <div class="settings-item-sub">יורד ב-${cc.chargeDate} • ${bank?.name}</div>
+        </div>
+      </div>
+      <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteCreditCard(${cc.id})">מחק</span>
+    </div>`;
+  }).join('');
+
+  // Fixed
+  document.getElementById('settings-fixed').innerHTML = state.fixedExpenses.map(fe => {
+    const cat = state.categories.find(c => c.id === fe.catId) || {};
+    return `<div class="settings-item">
+      <div class="settings-item-left">
+        <div class="settings-icon" style="background:${cat.color||'#555'}22">${cat.icon||'📌'}</div>
+        <div>
+          <div class="settings-item-name">${fe.name}</div>
+          <div class="settings-item-sub">₪${fe.amount.toLocaleString()} • יום ${fe.dayOfMonth}</div>
+        </div>
+      </div>
+      <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteFixed(${fe.id})">מחק</span>
+    </div>`;
+  }).join('');
+
+  // Categories
+  document.getElementById('settings-cats').innerHTML = state.categories.map(cat =>
+    `<div class="settings-item">
+      <div class="settings-item-left">
+        <div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
+        <div><div class="settings-item-name">${cat.name}</div></div>
+      </div>
+      <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteCat(${cat.id})">מחק</span>
+    </div>`
+  ).join('');
+
+  // Income categories
+  document.getElementById('settings-income-cats').innerHTML = state.incomeCategories.map(cat =>
+    `<div class="settings-item">
+      <div class="settings-item-left">
+        <div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
+        <div><div class="settings-item-name">${cat.name}</div></div>
+      </div>
+      <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteIncomeCat(${cat.id})">מחק</span>
+    </div>`
+  ).join('');
+}
+
+// ============ ADD TRANSACTION MODAL ============
+function showAddTxModal() {
+  const cats = state.categories;
+  const incomeCats = state.incomeCategories;
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">פעולה חדשה</div>
+    <div class="type-toggle">
+      <button class="type-btn active-expense" id="btn-expense" onclick="setTxType('expense')">הוצאה</button>
+      <button class="type-btn" id="btn-income" onclick="setTxType('income')">הכנסה</button>
+      <button class="type-btn" id="btn-transfer" onclick="setTxType('transfer')">העברה</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">תיאור</label>
+      <input class="form-input" id="tx-name" placeholder="לדוגמה: שופרסל, משכורת...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">סכום (₪)</label>
+      <input class="form-input" id="tx-amount" type="number" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">תאריך</label>
+      <input class="form-input" id="tx-date" type="date" value="${new Date().toISOString().split('T')[0]}">
+    </div>
+    <div class="form-group" id="tx-cat-group">
+      <label class="form-label">קטגוריה</label>
+      <select class="form-select" id="tx-cat">
+        ${cats.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group" id="tx-payment-group">
+      <label class="form-label">אמצעי תשלום</label>
+      <select class="form-select" id="tx-payment" onchange="updatePaymentFields()">
+        <option value="cash">מזומן</option>
+        ${state.creditCards.map(cc => `<option value="credit_${cc.id}">💳 ${cc.name}</option>`).join('')}
+        ${state.banks.map(b => `<option value="bank_${b.id}">🏦 ${b.name} (העברה)</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group" id="tx-bank-group" style="display:none">
+      <label class="form-label">לחשבון בנק</label>
+      <select class="form-select" id="tx-bank">
+        ${state.banks.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group" id="tx-income-cat-group" style="display:none">
+      <label class="form-label">קטגוריית הכנסה</label>
+      <select class="form-select" id="tx-income-cat">
+        ${incomeCats.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group" id="tx-from-group" style="display:none">
+      <label class="form-label">מחשבון</label>
+      <select class="form-select" id="tx-from">${state.banks.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}</select>
+    </div>
+    <div class="form-group" id="tx-to-group" style="display:none">
+      <label class="form-label">לחשבון</label>
+      <select class="form-select" id="tx-to">${state.banks.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}</select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">הערה (אופציונלי)</label>
+      <input class="form-input" id="tx-note" placeholder="הערה...">
+    </div>
+    <button class="submit-btn" onclick="submitTx()">הוסף פעולה</button>
+  `);
+  window._txType = 'expense';
+}
+
+function setTxType(type) {
+  window._txType = type;
+  ['expense','income','transfer'].forEach(t => {
+    document.getElementById('btn-'+t).className = 'type-btn';
+  });
+  document.getElementById('btn-'+type).className = `type-btn active-${type}`;
+  document.getElementById('tx-cat-group').style.display = type === 'expense' ? '' : 'none';
+  document.getElementById('tx-income-cat-group').style.display = type === 'income' ? '' : 'none';
+  document.getElementById('tx-payment-group').style.display = type === 'expense' ? '' : 'none';
+  document.getElementById('tx-bank-group').style.display = type === 'income' ? '' : 'none';
+  document.getElementById('tx-from-group').style.display = type === 'transfer' ? '' : 'none';
+  document.getElementById('tx-to-group').style.display = type === 'transfer' ? '' : 'none';
+}
+
+function submitTx() {
+  const name = document.getElementById('tx-name').value;
+  const amount = parseFloat(document.getElementById('tx-amount').value);
+  const date = document.getElementById('tx-date').value;
+  if (!name || !amount || !date) { showNotification('⚠️ נא למלא את כל השדות', 'warn'); return; }
+
+  const type = window._txType;
+  const tx = { id: Date.now(), type, date, name, amount, note: document.getElementById('tx-note').value };
+
+  if (type === 'expense') {
+    tx.catId = parseInt(document.getElementById('tx-cat').value);
+    const payment = document.getElementById('tx-payment').value;
+    if (payment.startsWith('credit_')) { tx.paymentMethod = 'credit'; tx.creditId = parseInt(payment.split('_')[1]); }
+    else if (payment.startsWith('bank_')) { tx.paymentMethod = 'bank'; tx.bankId = parseInt(payment.split('_')[1]); const bank = state.banks.find(b=>b.id===tx.bankId); if(bank) bank.balance -= amount; }
+    else { tx.paymentMethod = 'cash'; const cash = state.banks.find(b=>b.name==='מזומן'); if(cash) cash.balance -= amount; }
+    if (tx.paymentMethod === 'credit') { const cc = state.creditCards.find(c=>c.id===tx.creditId); if(cc) cc.spent += amount; }
+  } else if (type === 'income') {
+    tx.catId = parseInt(document.getElementById('tx-income-cat').value);
+    tx.bankId = parseInt(document.getElementById('tx-bank').value);
+    const bank = state.banks.find(b=>b.id===tx.bankId);
+    if (bank) bank.balance += amount;
+  } else {
+    tx.fromBankId = parseInt(document.getElementById('tx-from').value);
+    tx.toBankId = parseInt(document.getElementById('tx-to').value);
+    const from = state.banks.find(b=>b.id===tx.fromBankId);
+    const to = state.banks.find(b=>b.id===tx.toBankId);
+    if(from) from.balance -= amount;
+    if(to) to.balance += amount;
+  }
+
+  state.transactions.push(tx);
+  closeModal();
+  renderBankCards();
+  renderCreditCards();
+  renderRecentTx();
+  updateBalance();
+  showNotification('✅ הפעולה נוספה בהצלחה', 'success');
+}
+
+// ============ APPROVE MODAL ============
+function showApproveNotification() {
+  const today = new Date();
+  const upcoming = state.fixedExpenses.filter(fe => {
+    const daysLeft = fe.dayOfMonth - today.getDate();
+    return daysLeft >= 0 && daysLeft <= state.notifDaysBefore;
+  });
+  if (upcoming.length) {
+    const banner = document.createElement('div');
+    banner.className = 'notification';
+    banner.innerHTML = `
+      <div class="notification-icon">🔔</div>
+      <div class="notification-text">יש ${upcoming.length} חיובים קבועים בקרוב – <span style="color:var(--accent);cursor:pointer" onclick="showApproveModal()">אשר עכשיו</span></div>
+      <div class="notification-close" onclick="this.parentElement.remove()">×</div>
+    `;
+    document.getElementById('notification-container').appendChild(banner);
+    setTimeout(() => banner.remove(), 8000);
+  }
+}
+
+function showApproveModal() {
+  const today = new Date();
+  const items = state.fixedExpenses.map(fe => ({ ...fe, checked: true }));
+  window._approveItems = items;
+
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">אישור חיובים חודשיים</div>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:16px;">בדוק ואשר את החיובים לחודש זה. ניתן לשנות סכום לפני אישור.</p>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="type-btn ${state.approvalMode==='all'?'active-income':''}" onclick="setApproveMode('all')">אשר הכל</button>
+      <button class="type-btn ${state.approvalMode==='one'?'active-income':''}" onclick="setApproveMode('one')">אחד אחד</button>
+    </div>
+    <div id="approve-list">
+      ${items.map((fe,i) => renderApproveItem(fe, i)).join('')}
+    </div>
+    <button class="submit-btn" onclick="submitApprove()" style="margin-top:16px;">✅ אשר חיובים מסומנים</button>
+  `);
+  document.getElementById('notif-badge').style.display = 'none';
+}
+
+function renderApproveItem(fe, i) {
+  const cat = state.categories.find(c => c.id === fe.catId) || {};
+  return `<div class="approve-item">
+    <div class="approve-check ${fe.checked?'checked':''}" onclick="toggleApprove(${i})">
+      ${fe.checked ? '✓' : ''}
+    </div>
+    <div class="approve-info">
+      <div class="approve-name">${cat.icon||''} ${fe.name}</div>
+      <div class="approve-amount" id="approve-amount-${i}">₪ ${fe.amount.toLocaleString()} • יום ${fe.dayOfMonth}</div>
+    </div>
+    <span class="approve-change" onclick="editApproveAmount(${i})">שנה</span>
+  </div>`;
+}
+
+function toggleApprove(i) { window._approveItems[i].checked = !window._approveItems[i].checked; refreshApproveList(); }
+function setApproveMode(mode) { state.approvalMode = mode; }
+function editApproveAmount(i) {
+  const fe = window._approveItems[i];
+  const newAmt = prompt('סכום חדש:', fe.amount);
+  if (newAmt && !isNaN(newAmt)) { window._approveItems[i].amount = parseFloat(newAmt); refreshApproveList(); }
+}
+function refreshApproveList() {
+  document.getElementById('approve-list').innerHTML = window._approveItems.map((fe,i) => renderApproveItem(fe,i)).join('');
+}
+
+function submitApprove() {
+  const approved = window._approveItems.filter(fe => fe.checked);
+  approved.forEach(fe => {
+    const d = new Date(); d.setDate(fe.dayOfMonth);
+    state.transactions.push({
+      id: Date.now() + fe.id,
+      type: 'expense',
+      date: d.toISOString().split('T')[0],
+      name: fe.name,
+      amount: fe.amount,
+      catId: fe.catId,
+      paymentMethod: fe.paymentMethod,
+      bankId: fe.bankId,
+      creditId: fe.creditId,
+      note: 'חיוב קבוע',
+      fixed: true,
+    });
+    if (fe.paymentMethod === 'bank') { const bank = state.banks.find(b=>b.id===fe.bankId); if(bank) bank.balance -= fe.amount; }
+  });
+  closeModal();
+  renderBankCards();
+  renderRecentTx();
+  updateBalance();
+  showNotification(`✅ ${approved.length} חיובים אושרו`, 'success');
+}
+
+// ============ ADD BANK MODAL ============
+function showAddBankModal() {
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">הוסף חשבון בנק</div>
+    <div class="form-group"><label class="form-label">שם הבנק</label><input class="form-input" id="bank-name" placeholder="לדוגמה: פועלים"></div>
+    <div class="form-group"><label class="form-label">יתרה נוכחית (₪)</label><input class="form-input" id="bank-balance" type="number" placeholder="0"></div>
+    <div class="form-group"><label class="form-label">צבע</label>
+      <div class="color-picker-row" id="bank-color-picker">
+        ${['#2ecc71','#3498db','#9b59b6','#e74c3c','#f39c12','#1abc9c','#e91e63','#6c63ff','#4ecdc4'].map(c =>
+          `<div class="color-dot ${c==='#2ecc71'?'selected':''}" style="background:${c}" onclick="selectColor(this,'${c}','bank-selected-color')"></div>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="bank-selected-color" value="#2ecc71">
+    </div>
+    <button class="submit-btn" onclick="submitAddBank()">הוסף</button>
+  `);
+}
+
+function submitAddBank() {
+  const name = document.getElementById('bank-name').value;
+  const balance = parseFloat(document.getElementById('bank-balance').value) || 0;
+  const color = document.getElementById('bank-selected-color').value;
+  if (!name) { showNotification('⚠️ נא להזין שם', 'warn'); return; }
+  state.banks.push({ id: Date.now(), name, balance, color });
+  closeModal();
+  renderBankCards();
+  renderSettings();
+  showNotification('✅ חשבון הבנק נוסף', 'success');
+}
+
+// ============ ADD CREDIT MODAL ============
+function showAddCreditModal() {
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">הוסף כרטיס אשראי</div>
+    <div class="form-group"><label class="form-label">שם הכרטיס</label><input class="form-input" id="cc-name" placeholder="לדוגמה: ויזה כאל"></div>
+    <div class="form-group"><label class="form-label">תאריך חיוב (יום בחודש)</label><input class="form-input" id="cc-day" type="number" min="1" max="31" placeholder="10"></div>
+    <div class="form-group"><label class="form-label">חשבון בנק שממנו יורד</label>
+      <select class="form-select" id="cc-bank">${state.banks.filter(b=>b.name!=='מזומן').map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select>
+    </div>
+    <button class="submit-btn" onclick="submitAddCredit()">הוסף</button>
+  `);
+}
+
+function submitAddCredit() {
+  const name = document.getElementById('cc-name').value;
+  const chargeDate = parseInt(document.getElementById('cc-day').value);
+  const bankId = parseInt(document.getElementById('cc-bank').value);
+  if (!name || !chargeDate) { showNotification('⚠️ נא למלא את כל השדות', 'warn'); return; }
+  state.creditCards.push({ id: Date.now(), name, chargeDate, bankId, spent: 0 });
+  closeModal();
+  renderCreditCards();
+  renderSettings();
+  showNotification('✅ כרטיס נוסף', 'success');
+}
+
+// ============ ADD FIXED EXPENSE MODAL ============
+function showAddFixedModal() {
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">הוספת הוצאה קבועה</div>
+    <div class="form-group"><label class="form-label">שם</label><input class="form-input" id="fixed-name" placeholder="לדוגמה: ביטוח רכב"></div>
+    <div class="form-group"><label class="form-label">סכום (₪)</label><input class="form-input" id="fixed-amount" type="number" placeholder="0"></div>
+    <div class="form-group"><label class="form-label">יום בחודש</label><input class="form-input" id="fixed-day" type="number" min="1" max="31" placeholder="1"></div>
+    <div class="form-group"><label class="form-label">קטגוריה</label>
+      <select class="form-select" id="fixed-cat">${state.categories.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select>
+    </div>
+    <div class="form-group"><label class="form-label">אמצעי תשלום</label>
+      <select class="form-select" id="fixed-payment" onchange="updateFixedPaymentFields()">
+        ${state.creditCards.map(cc=>`<option value="credit_${cc.id}">💳 ${cc.name}</option>`).join('')}
+        ${state.banks.filter(b=>b.name!=='מזומן').map(b=>`<option value="bank_${b.id}">🏦 ${b.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">התראה (ימים לפני)</label><input class="form-input" id="fixed-notif" type="number" value="3" min="0" max="14"></div>
+    <button class="submit-btn" onclick="submitAddFixed()">הוסף</button>
+  `);
+}
+
+function submitAddFixed() {
+  const name = document.getElementById('fixed-name').value;
+  const amount = parseFloat(document.getElementById('fixed-amount').value);
+  const dayOfMonth = parseInt(document.getElementById('fixed-day').value);
+  const catId = parseInt(document.getElementById('fixed-cat').value);
+  const payment = document.getElementById('fixed-payment').value;
+  if (!name || !amount || !dayOfMonth) { showNotification('⚠️ נא למלא את כל השדות', 'warn'); return; }
+  const fe = { id: Date.now(), name, amount, dayOfMonth, catId };
+  if (payment.startsWith('credit_')) { fe.paymentMethod = 'credit'; fe.creditId = parseInt(payment.split('_')[1]); }
+  else { fe.paymentMethod = 'bank'; fe.bankId = parseInt(payment.split('_')[1]); }
+  state.fixedExpenses.push(fe);
+  closeModal();
+  renderSettings();
+  renderUpcoming();
+  showNotification('✅ הוצאה קבועה נוספה', 'success');
+}
+
+// ============ ADD CATEGORY MODAL ============
+function showAddCatModal() { showAddCategoryModal(false); }
+function showAddIncomeCatModal() { showAddCategoryModal(true); }
+
+function showAddCategoryModal(isIncome) {
+  const emojis = ['🏠','🛒','💡','🚗','🎉','👗','💊','📚','🏗️','📦','✈️','🎓','💈','🍔','🎮','📱','🏋️','🎁'];
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">הוספת קטגוריה ${isIncome ? 'הכנסה' : 'הוצאה'}</div>
+    <div class="form-group"><label class="form-label">שם</label><input class="form-input" id="cat-name" placeholder="שם הקטגוריה"></div>
+    <div class="form-group"><label class="form-label">אייקון</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${emojis.map(e=>`<span style="font-size:24px;cursor:pointer;padding:4px;border-radius:8px;" onclick="selectEmoji(this,'${e}')">${e}</span>`).join('')}</div>
+      <input type="hidden" id="cat-icon" value="📦">
+    </div>
+    <div class="form-group"><label class="form-label">צבע</label>
+      <div class="color-picker-row">
+        ${['#e74c3c','#27ae60','#3498db','#9b59b6','#e67e22','#1abc9c','#e91e63','#6c63ff','#f39c12'].map(c=>
+          `<div class="color-dot ${c==='#6c63ff'?'selected':''}" style="background:${c}" onclick="selectColor(this,'${c}','cat-color')"></div>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="cat-color" value="#6c63ff">
+    </div>
+    <button class="submit-btn" onclick="submitAddCat(${isIncome})">הוסף</button>
+  `);
+}
+
+function selectEmoji(el, emoji) {
+  document.querySelectorAll('#modal-container span[onclick^="selectEmoji"]').forEach(e => e.style.background = '');
+  el.style.background = 'var(--card2)';
+  document.getElementById('cat-icon').value = emoji;
+}
+
+function submitAddCat(isIncome) {
+  const name = document.getElementById('cat-name').value;
+  const icon = document.getElementById('cat-icon').value;
+  const color = document.getElementById('cat-color').value;
+  if (!name) { showNotification('⚠️ נא להזין שם', 'warn'); return; }
+  const newCat = { id: Date.now(), name, icon, color };
+  if (isIncome) state.incomeCategories.push(newCat); else state.categories.push(newCat);
+  closeModal();
+  renderSettings();
+  showNotification('✅ קטגוריה נוספה', 'success');
+}
+
+// ============ DELETE ACTIONS ============
+function deleteBank(id) { if(confirm('למחוק חשבון זה?')) { state.banks = state.banks.filter(b=>b.id!==id); renderBankCards(); renderSettings(); } }
+function deleteCreditCard(id) { if(confirm('למחוק כרטיס זה?')) { state.creditCards = state.creditCards.filter(c=>c.id!==id); renderCreditCards(); renderSettings(); } }
+function deleteFixed(id) { if(confirm('למחוק הוצאה קבועה זו?')) { state.fixedExpenses = state.fixedExpenses.filter(f=>f.id!==id); renderUpcoming(); renderSettings(); } }
+function deleteCat(id) { state.categories = state.categories.filter(c=>c.id!==id); renderSettings(); }
+function deleteIncomeCat(id) { state.incomeCategories = state.incomeCategories.filter(c=>c.id!==id); renderSettings(); }
+
+// ============ INVITE MODAL ============
+function showInviteModal() {
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">הזמן לסביבת עבודה</div>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:16px;">שתף קישור זה עם בן/בת הזוג:</p>
+    <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:14px;font-size:13px;color:var(--accent);word-break:break-all;cursor:pointer" onclick="copyInvite()">
+      https://budget-app.vercel.app/invite/demo123abc
+    </div>
+    <button class="submit-btn" style="margin-top:16px" onclick="copyInvite()">📋 העתק קישור</button>
+  `);
+}
+
+function copyInvite() {
+  navigator.clipboard?.writeText('https://budget-app.vercel.app/invite/demo123abc');
+  showNotification('📋 קישור הועתק', 'success');
+}
+
+// ============ NOTIF SETTINGS ============
+function showNotifSettings() {
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">הגדרות התראות</div>
+    <div class="form-group"><label class="form-label">כמה ימים לפני חיוב לקבל התראה?</label>
+      <input class="form-input" id="notif-days" type="number" min="0" max="14" value="${state.notifDaysBefore}">
+    </div>
+    <button class="submit-btn" onclick="saveNotifSettings()">שמור</button>
+  `);
+}
+
+function saveNotifSettings() {
+  state.notifDaysBefore = parseInt(document.getElementById('notif-days').value) || 3;
+  closeModal();
+  showNotification('✅ הגדרות נשמרו', 'success');
+}
+
+function showDailyNotif() {
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">תזכורת יומית</div>
+    <div class="form-group"><label class="form-label">שעת תזכורת</label>
+      <input class="form-input" id="daily-time" type="time" value="${state.dailyReminderTime}">
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">תקבל/י הודעה בסוף היום: "האם הוצאת משהו היום? אל תשכח לעדכן!"</p>
+    <button class="submit-btn" onclick="saveDailyNotif()">שמור</button>
+  `);
+}
+
+function saveDailyNotif() {
+  state.dailyReminderTime = document.getElementById('daily-time').value;
+  closeModal();
+  showNotification('✅ תזכורת יומית הוגדרה ל-' + state.dailyReminderTime, 'success');
+}
+
+// ============ BANK DETAIL ============
+function showBankDetail(bankId) {
+  const bank = state.banks.find(b=>b.id===bankId);
+  if (!bank) return;
+  const status = getBankStatus(bank);
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏦 ${bank.name}</div>
+    <div style="text-align:center;padding:20px 0;">
+      <div style="font-size:36px;font-weight:800;color:${status.dot}">₪ ${bank.balance.toLocaleString()}</div>
+      <div style="font-size:14px;color:var(--text2);margin-top:4px">יתרה נוכחית</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">תיקון יתרה ידני</label>
+      <input class="form-input" id="bank-fix-balance" type="number" value="${bank.balance}" placeholder="יתרה חדשה">
+    </div>
+    <button class="submit-btn" onclick="fixBankBalance(${bankId})">עדכן יתרה</button>
+  `);
+}
+
+function fixBankBalance(bankId) {
+  const bank = state.banks.find(b=>b.id===bankId);
+  const newBalance = parseFloat(document.getElementById('bank-fix-balance').value);
+  if (isNaN(newBalance)) return;
+  bank.balance = newBalance;
+  closeModal();
+  renderBankCards();
+  showNotification('✅ יתרה עודכנה', 'success');
+}
+
+// ============ HELPERS ============
+function selectColor(el, color, inputId) {
+  el.parentElement.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById(inputId).value = color;
+}
+
+function updatePaymentFields() {}
+function updateFixedPaymentFields() {}
+function editBank(id) { showNotification('עריכה תהיה זמינה בגרסה הבאה', 'info'); }
+
+// ============ MODAL ENGINE ============
+function showModal(html) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'active-modal';
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+  document.getElementById('modal-container').appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  const m = document.getElementById('active-modal');
+  if (m) m.remove();
+  document.body.style.overflow = '';
+}
+
+// ============ NOTIFICATIONS ============
+function showNotification(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = 'notification';
+  const colors = { success: '#2ecc71', warn: '#f39c12', info: '#6c63ff' };
+  el.style.borderColor = colors[type] || '#6c63ff';
+  el.innerHTML = `<div class="notification-text">${msg}</div><div class="notification-close" onclick="this.parentElement.remove()">×</div>`;
+  document.getElementById('notification-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ============ SERVICE WORKER ============
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+</script>
+</body>
+</html>
