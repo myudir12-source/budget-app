@@ -722,12 +722,12 @@
   <div class="auth-title">תקציב משפחתי</div>
   <div class="auth-sub">נהל את הכסף שלך בחכמה</div>
   <div class="auth-card">
-    <button class="google-btn" onclick="loginGoogle()">
+    <button class="google-btn" id="btn-google-login">
       <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.31z"/></svg>
       כניסה עם Google
     </button>
     <div class="auth-divider">או</div>
-    <button class="demo-btn" onclick="loginDemo()">🚀 כניסת דמו</button>
+    <button class="demo-btn" id="btn-demo-login">🚀 כניסת דמו</button>
     <p style="text-align:center;color:var(--text3);font-size:12px;margin-top:16px;">בלחיצה על כניסה אתה מסכים לתנאי השימוש</p>
   </div>
 </div>
@@ -1202,7 +1202,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBAuOsbQi19pQOl7sLJMTCDcoc6h8n-WaY",
@@ -1217,42 +1217,31 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-window._firebase = { auth, db, doc, setDoc, getDoc, onSnapshot, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged };
-
-// Auto-login check
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    window._firebaseUser = user;
-    await loadUserData(user.uid);
-  }
-});
-
 async function loadUserData(uid) {
   const userRef = doc(db, 'users', uid, 'data', 'main');
   const snap = await getDoc(userRef);
   if (snap.exists()) {
     const data = snap.data();
-    // Merge saved data into state
-    if (data.banks) state.banks = data.banks;
-    if (data.creditCards) state.creditCards = data.creditCards;
-    if (data.fixedExpenses) state.fixedExpenses = data.fixedExpenses;
-    if (data.transactions) state.transactions = data.transactions;
-    if (data.categories) state.categories = data.categories;
-    if (data.incomeCategories) state.incomeCategories = data.incomeCategories;
-    if (data.members) state.members = data.members;
+    if (data.banks) window.state.banks = data.banks;
+    if (data.creditCards) window.state.creditCards = data.creditCards;
+    if (data.fixedExpenses) window.state.fixedExpenses = data.fixedExpenses;
+    if (data.transactions) window.state.transactions = data.transactions;
+    if (data.categories) window.state.categories = data.categories;
+    if (data.incomeCategories) window.state.incomeCategories = data.incomeCategories;
+    if (data.members) window.state.members = data.members;
+    if (data.notifDaysBefore) window.state.notifDaysBefore = data.notifDaysBefore;
     if (data.user) {
-      state.user = data.user;
-      // Skip onboarding, go straight to app
+      window.state.user = data.user;
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('onboarding-screen').style.display = 'none';
+      document.getElementById('tutorial-screen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       document.getElementById('workspace-name').textContent = 'סביבת העבודה של ' + data.user.name;
       document.querySelector('.avatar').textContent = data.user.initials;
       if (data.user.color) document.querySelector('.avatar').style.background = data.user.color;
-      initApp();
+      window.initApp();
     }
   } else {
-    // New user – show onboarding
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('onboarding-screen').style.display = 'flex';
   }
@@ -1261,42 +1250,62 @@ async function loadUserData(uid) {
 window._saveToFirebase = async function() {
   if (!window._firebaseUser) return;
   const uid = window._firebaseUser.uid;
-  const userRef = doc(db, 'users', uid, 'data', 'main');
-  await setDoc(userRef, {
-    user: state.user,
-    banks: state.banks,
-    creditCards: state.creditCards,
-    fixedExpenses: state.fixedExpenses,
-    transactions: state.transactions,
-    categories: state.categories,
-    incomeCategories: state.incomeCategories,
-    members: state.members,
-    notifDaysBefore: state.notifDaysBefore,
-    dailyReminderTime: state.dailyReminderTime,
-    savedAt: new Date().toISOString(),
-  });
+  try {
+    await setDoc(doc(db, 'users', uid, 'data', 'main'), {
+      user: window.state.user,
+      banks: window.state.banks,
+      creditCards: window.state.creditCards,
+      fixedExpenses: window.state.fixedExpenses,
+      transactions: window.state.transactions,
+      categories: window.state.categories,
+      incomeCategories: window.state.incomeCategories,
+      members: window.state.members,
+      notifDaysBefore: window.state.notifDaysBefore,
+      dailyReminderTime: window.state.dailyReminderTime,
+      savedAt: new Date().toISOString(),
+    });
+  } catch(e) { console.error('Save error:', e); }
 };
 
-window._googleLogin = async function() {
-  const provider = new GoogleAuthProvider();
-  try {
-    const result = await signInWithPopup(auth, provider);
-    window._firebaseUser = result.user;
-    await loadUserData(result.user.uid);
-  } catch(e) {
-    showNotification('❌ שגיאה בכניסה: ' + e.message, 'warn');
+// Wire up buttons after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  const gBtn = document.getElementById('btn-google-login');
+  const dBtn = document.getElementById('btn-demo-login');
+  if (gBtn) gBtn.addEventListener('click', async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      gBtn.textContent = '⏳ מתחבר...';
+      const result = await signInWithPopup(auth, provider);
+      window._firebaseUser = result.user;
+      await loadUserData(result.user.uid);
+    } catch(e) {
+      gBtn.innerHTML = 'כניסה עם Google';
+      alert('שגיאה: ' + e.message);
+    }
+  });
+  if (dBtn) dBtn.addEventListener('click', () => {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('onboarding-screen').style.display = 'flex';
+  });
+});
+
+// Auto-login check
+onAuthStateChanged(auth, async (user) => {
+  if (user && !window.state?.user) {
+    window._firebaseUser = user;
+    await loadUserData(user.uid);
   }
-};
+});
 
 window._logout = async function() {
   await signOut(auth);
   window._firebaseUser = null;
-  state.user = null;
-  state.banks = [];
-  state.creditCards = [];
-  state.fixedExpenses = [];
-  state.transactions = [];
-  state.members = [];
+  window.state.user = null;
+  window.state.banks = [];
+  window.state.creditCards = [];
+  window.state.fixedExpenses = [];
+  window.state.transactions = [];
+  window.state.members = [];
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 };
@@ -1306,7 +1315,7 @@ window._logout = async function() {
 <script>
 
 // ============ STATE ============
-let state = {
+window.state = {
   user: null,
   currentMonth: new Date().getMonth(),
   currentYear: new Date().getFullYear(),
@@ -1338,13 +1347,12 @@ let state = {
   approvalMode: 'all',
 };
 
+// Alias for convenience
+let state = window.state;
+
 // ============ AUTH ============
 function loginGoogle() {
-  if (window._googleLogin) {
-    window._googleLogin();
-  } else {
-    setTimeout(() => { if (window._googleLogin) window._googleLogin(); else showNotification('⏳ טוען... נסה שוב', 'warn'); }, 1500);
-  }
+  // handled by Firebase module via button event listener
 }
 
 function loginDemo() {
@@ -1411,7 +1419,7 @@ function saveUsername() {
 }
 
 // ============ INIT ============
-function initApp() {
+window.initApp = function initApp() {
   renderBankCards();
   renderCreditCards();
   renderUpcoming();
