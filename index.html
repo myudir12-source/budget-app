@@ -733,7 +733,7 @@
 </div>
 
 <!-- ONBOARDING – USERNAME -->
-<div id="onboarding-screen" style="display:none;min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(108,99,255,0.15) 0%,transparent 70%);">
+<div id="onboarding-screen" style="display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(108,99,255,0.15) 0%,transparent 70%);">
   <div style="font-size:48px;margin-bottom:12px;">👤</div>
   <div style="font-size:26px;font-weight:800;margin-bottom:8px;">איך קוראים לך?</div>
   <div style="color:var(--text2);font-size:15px;margin-bottom:36px;text-align:center;">בחר שם משתמש שיוצג לשאר חברי הסביבה</div>
@@ -743,6 +743,175 @@
       <input class="form-input" id="onboard-username" placeholder="לדוגמה: יהודה" style="font-size:18px;text-align:center;" maxlength="20">
     </div>
     <button class="submit-btn" onclick="submitOnboarding()">המשך ←</button>
+  </div>
+</div>
+
+<!-- ONBOARDING TUTORIAL – 6 STEPS -->
+<div id="tutorial-screen" style="display:none;min-height:100vh;background:var(--bg);">
+  <div style="max-width:480px;margin:0 auto;padding:24px;">
+    <!-- Progress dots -->
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:32px;padding-top:20px;" id="tutorial-dots"></div>
+
+    <!-- Steps -->
+    <div id="tutorial-steps">
+      <!-- Step 1: Bank Account -->
+      <div class="tutorial-step" id="tstep-0">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:56px;margin-bottom:12px;">🏦</div>
+          <div style="font-size:24px;font-weight:800;margin-bottom:8px;">הוסף חשבון בנק</div>
+          <div style="color:var(--text2);font-size:15px;line-height:1.6;">כדי שהאפליקציה תדע כמה כסף יש לך, צריך להוסיף את חשבונות הבנק שלך.</div>
+        </div>
+        <!-- Mock UI -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">בהגדרות ← חשבונות בנק</div>
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="font-size:20px">🏦</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;">שם הבנק</div>
+              <div style="font-size:11px;color:var(--text3);">לאומי / דיסקונט / פועלים...</div>
+            </div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px">💰</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;">יתרה נוכחית</div>
+              <div style="font-size:11px;color:var(--text3);">הכנס כמה יש עכשיו בחשבון</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;padding:8px 12px;background:var(--accent);border-radius:var(--radius-sm);text-align:center;font-size:13px;font-weight:600;">+ הוסף חשבון בנק</div>
+        </div>
+        <div style="background:rgba(108,99,255,0.1);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--text2);">
+          💡 <strong>טיפ:</strong> גם מזומן יכול להיות "חשבון" – פשוט קרא לו "מזומן"
+        </div>
+      </div>
+
+      <!-- Step 2: Credit Cards -->
+      <div class="tutorial-step" id="tstep-1" style="display:none">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:56px;margin-bottom:12px;">💳</div>
+          <div style="font-size:24px;font-weight:800;margin-bottom:8px;">הוסף כרטיסי אשראי</div>
+          <div style="color:var(--text2);font-size:15px;line-height:1.6;">הגדר את הכרטיסים שלך כדי שהאפליקציה תדע מתי ומאיפה יורד כל חיוב.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">בהגדרות ← כרטיסי אשראי</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px;font-size:13px;">📝 שם הכרטיס (ויזה, מאסטרקארד...)</div>
+            <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px;font-size:13px;">📅 תאריך חיוב (יום בחודש – 10, 15, 20...)</div>
+            <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px;font-size:13px;">🏦 מאיזה חשבון בנק יורד</div>
+          </div>
+        </div>
+        <div style="background:rgba(78,205,196,0.1);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--text2);">
+          💡 <strong>טיפ:</strong> בדשבורד תוכל לראות בכל רגע כמה צברת על כל כרטיס
+        </div>
+      </div>
+
+      <!-- Step 3: Add Transaction -->
+      <div class="tutorial-step" id="tstep-2" style="display:none">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:56px;margin-bottom:12px;">➕</div>
+          <div style="font-size:24px;font-weight:800;margin-bottom:8px;">הוספת פעולה</div>
+          <div style="color:var(--text2);font-size:15px;line-height:1.6;">לחץ על כפתור + בתחתית המסך כדי להוסיף הוצאה, הכנסה או העברה בין חשבונות.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;">
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <div style="flex:1;padding:8px;background:rgba(231,76,60,0.15);border:2px solid var(--red);border-radius:8px;text-align:center;font-size:13px;font-weight:600;color:var(--red);">הוצאה</div>
+            <div style="flex:1;padding:8px;background:var(--bg3);border:2px solid var(--border);border-radius:8px;text-align:center;font-size:13px;color:var(--text2);">הכנסה</div>
+            <div style="flex:1;padding:8px;background:var(--bg3);border:2px solid var(--border);border-radius:8px;text-align:center;font-size:13px;color:var(--text2);">העברה</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;">✏️ תיאור (שופרסל, קפה...)</div>
+            <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;">💵 סכום</div>
+            <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:13px;">🗂 קטגוריה + אמצעי תשלום</div>
+          </div>
+        </div>
+        <div style="background:rgba(46,204,113,0.1);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--text2);">
+          💡 <strong>טיפ:</strong> לחיצה על כל פעולה ברשימה מאפשרת עריכה ומחיקה
+        </div>
+      </div>
+
+      <!-- Step 4: Dashboard -->
+      <div class="tutorial-step" id="tstep-3" style="display:none">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:56px;margin-bottom:12px;">📊</div>
+          <div style="font-size:24px;font-weight:800;margin-bottom:8px;">הדשבורד</div>
+          <div style="color:var(--text2);font-size:15px;line-height:1.6;">הדשבורד מציג את כל המידע החשוב במקום אחד.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;">💰 מאזן חודשי</span>
+            <span style="font-size:13px;color:var(--green);font-weight:600;">+ ₪4,200</span>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;">🏦 חשבונות בנק</span>
+            <span style="font-size:11px;color:var(--text2);">לחץ לעריכה</span>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;">💳 כרטיסי אשראי</span>
+            <span style="font-size:11px;color:var(--text2);">סכום שנצבר</span>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;">⏰ חיובים קרובים</span>
+            <span style="font-size:11px;color:var(--text2);">ב-10 ימים הקרובים</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Notifications -->
+      <div class="tutorial-step" id="tstep-4" style="display:none">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:56px;margin-bottom:12px;">🔔</div>
+          <div style="font-size:24px;font-weight:800;margin-bottom:8px;">התראות</div>
+          <div style="color:var(--text2);font-size:15px;line-height:1.6;">הגדר התראות כדי לא לפספס חיובים וכדי לזכור לעדכן הוצאות.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">🔔 התראת חיוב קבוע</div>
+            <div style="font-size:12px;color:var(--text2);">קבל התראה X ימים לפני כל חיוב קבוע</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">🌙 תזכורת יומית</div>
+            <div style="font-size:12px;color:var(--text2);">"האם הוצאת משהו היום?" – בשעה שתבחר</div>
+          </div>
+        </div>
+        <div style="background:rgba(243,156,18,0.1);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--text2);">
+          💡 <strong>טיפ:</strong> מצא את ההתראות בהגדרות ← התראות
+        </div>
+      </div>
+
+      <!-- Step 6: Bank Colors -->
+      <div class="tutorial-step" id="tstep-5" style="display:none">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:56px;margin-bottom:12px;">🚦</div>
+          <div style="font-size:24px;font-weight:800;margin-bottom:8px;">צבעי חשבון בנק</div>
+          <div style="color:var(--text2);font-size:15px;line-height:1.6;">כל חשבון בנק מקבל צבע שמראה אם יש מספיק כסף לחיובים ב-5 הימים הקרובים.</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="border:2px solid rgba(46,204,113,0.5);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:14px;height:14px;border-radius:50%;background:#2ecc71;flex-shrink:0;"></div>
+            <div><div style="font-size:13px;font-weight:600;color:#2ecc71;">ירוק</div><div style="font-size:12px;color:var(--text2);">יש יותר מ-₪2,500 מעל החיובים</div></div>
+          </div>
+          <div style="border:2px solid rgba(243,156,18,0.5);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:14px;height:14px;border-radius:50%;background:#f39c12;flex-shrink:0;"></div>
+            <div><div style="font-size:13px;font-weight:600;color:#f39c12;">צהוב</div><div style="font-size:12px;color:var(--text2);">פחות מ-₪2,500 מעל החיובים</div></div>
+          </div>
+          <div style="border:2px solid rgba(230,126,34,0.5);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:14px;height:14px;border-radius:50%;background:#e67e22;flex-shrink:0;"></div>
+            <div><div style="font-size:13px;font-weight:600;color:#e67e22;">כתום</div><div style="font-size:12px;color:var(--text2);">פחות מ-₪500 מעל החיובים</div></div>
+          </div>
+          <div style="border:2px solid rgba(231,76,60,0.5);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:14px;height:14px;border-radius:50%;background:#e74c3c;flex-shrink:0;"></div>
+            <div><div style="font-size:13px;font-weight:600;color:#e74c3c;">אדום</div><div style="font-size:12px;color:var(--text2);">מינוס – אין מספיק כסף!</div></div>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="finishTutorial()">🚀 בואו נתחיל!</button>
+      </div>
+    </div>
+
+    <!-- Nav buttons -->
+    <div style="display:flex;justify-content:space-between;margin-top:24px;" id="tutorial-nav">
+      <button id="tutorial-prev" onclick="tutorialStep(-1)" style="padding:10px 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;">← הקודם</button>
+      <button id="tutorial-next" onclick="tutorialStep(1)" style="padding:10px 24px;background:var(--accent);border:none;border-radius:var(--radius-sm);color:white;cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;font-weight:600;">הבנתי ←</button>
+    </div>
   </div>
 </div>
 
@@ -846,16 +1015,24 @@
       <button class="month-btn" onclick="changeMonth(1)">›</button>
     </div>
 
+    <!-- TABS: הוצאות / הכנסות / השוואה -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="type-btn active-expense" id="an-tab-expense" onclick="setAnalyticsTab('expense')">הוצאות</button>
+      <button class="type-btn" id="an-tab-income" onclick="setAnalyticsTab('income')">הכנסות</button>
+      <button class="type-btn" id="an-tab-compare" onclick="setAnalyticsTab('compare')">השוואה שנתית</button>
+    </div>
+
     <!-- YEARLY CHART -->
     <div class="card">
-      <div class="card-title" id="yearly-chart-title">הכנסות מול הוצאות – 2026</div>
+      <div class="card-title" id="yearly-chart-title">הוצאות לפי חודש – 2026</div>
       <div class="chart-container">
         <canvas id="yearlyChart"></canvas>
       </div>
+      <div id="yearly-month-list" style="margin-top:12px;display:none;"></div>
     </div>
 
     <!-- MONTHLY SUMMARY -->
-    <div class="card">
+    <div class="card" id="an-cat-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="card-title" style="margin-bottom:0" id="cat-breakdown-title">הוצאות לפי קטגוריה</div>
         <div id="cat-month-total" style="font-size:14px;font-weight:600;color:var(--red)"></div>
@@ -868,6 +1045,10 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="section-title" id="cat-tx-title">פעולות</div>
         <span style="color:var(--accent);cursor:pointer;font-size:13px" onclick="hideCatDetail()">סגור ×</span>
+      </div>
+      <!-- CATEGORY MONTHLY CHART -->
+      <div style="height:120px;margin-bottom:12px;">
+        <canvas id="catMonthlyChart"></canvas>
       </div>
       <div id="cat-tx-list"></div>
     </div>
@@ -950,6 +1131,31 @@
           <div>
             <div class="settings-item-name">תזכורת יומית</div>
             <div class="settings-item-sub">בסוף יום – האם הוצאת היום?</div>
+          </div>
+        </div>
+        <div class="settings-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- HELP -->
+    <div class="settings-section">
+      <div class="settings-title">עזרה</div>
+      <div class="settings-item" onclick="showHelp()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(78,205,196,0.15)">❓</div>
+          <div>
+            <div class="settings-item-name">מדריך עזרה</div>
+            <div class="settings-item-sub">הסבר מפורט על כל הפיצ'רים</div>
+          </div>
+        </div>
+        <div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="startTutorial()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(108,99,255,0.15)">🎓</div>
+          <div>
+            <div class="settings-item-name">סיור מודרך</div>
+            <div class="settings-item-sub">עבור שוב על הסיור הראשוני</div>
           </div>
         </div>
         <div class="settings-arrow">›</div>
@@ -1156,12 +1362,10 @@ function submitOnboarding() {
     state.members.push({ name, initials: name[0].toUpperCase(), color, role: state.members.length === 0 ? 'מנהל' : 'חבר' });
   }
   document.getElementById('onboarding-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('workspace-name').textContent = 'סביבת העבודה של ' + name;
-  document.querySelector('.avatar').textContent = state.user.initials;
-  document.querySelector('.avatar').style.background = color;
-  initApp();
-  saveData();
+  document.getElementById('tutorial-screen').style.display = 'block';
+  _tutorialStep = 0;
+  renderTutorialDots();
+  showTutorialStep(0);
 }
 
 function logout() {
@@ -1279,7 +1483,12 @@ function getBankStatus(bank) {
   });
   state.creditCards.forEach(cc => {
     if (cc.bankId === bank.id && cc.chargeDate >= todayDay && cc.chargeDate <= in5) {
-      upcoming += cc.spent;
+      // Calculate actual spent from transactions
+      const spent = state.transactions.filter(t =>
+        t.type === 'expense' && t.paymentMethod === 'credit' && t.creditId === cc.id &&
+        new Date(t.date).getMonth() === today.getMonth() && new Date(t.date).getFullYear() === today.getFullYear()
+      ).reduce((s,t) => s + t.amount, 0);
+      upcoming += spent;
     }
   });
   const remaining = bank.balance - upcoming;
@@ -1306,16 +1515,25 @@ function renderBankCards() {
 
 function renderCreditCards() {
   const container = document.getElementById('credit-cards-container');
+  if (!container) return;
+  // Calculate spent from actual transactions this month
   container.innerHTML = state.creditCards.map(cc => {
     const bank = state.banks.find(b => b.id === cc.bankId);
-    return `<div class="credit-card-item">
+    const spent = state.transactions.filter(t =>
+      t.type === 'expense' &&
+      t.paymentMethod === 'credit' &&
+      t.creditId === cc.id &&
+      new Date(t.date).getMonth() === state.currentMonth &&
+      new Date(t.date).getFullYear() === state.currentYear
+    ).reduce((s,t) => s + t.amount, 0);
+    return `<div class="credit-card-item" onclick="editCreditCard(${cc.id})">
       <div>
         <div class="credit-card-name">💳 ${cc.name}</div>
-        <div class="credit-card-info">יורד ב-${cc.chargeDate} לחודש • ${bank ? bank.name : ''}</div>
+        <div class="credit-card-info">יורד ב-${cc.chargeDate} לחודש • ${bank ? bank.name : '?'}</div>
       </div>
-      <div class="credit-card-amount">₪ ${cc.spent.toLocaleString()}</div>
+      <div class="credit-card-amount">₪ ${spent.toLocaleString()}</div>
     </div>`;
-  }).join('');
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px;text-align:center">אין כרטיסים עדיין</div>';
 }
 
 // ============ UPCOMING ============
@@ -2176,6 +2394,310 @@ function updatePaymentFields() {}
 function updateFixedPaymentFields() {}
 function editBank(id) { showNotification('עריכה תהיה זמינה בגרסה הבאה', 'info'); }
 
+// ============ TUTORIAL ============
+let _tutorialStep = 0;
+const TUTORIAL_TOTAL = 6;
+
+function startTutorial() {
+  _tutorialStep = 0;
+  document.getElementById('tutorial-screen').style.display = 'block';
+  renderTutorialDots();
+  showTutorialStep(0);
+}
+
+function finishTutorial() {
+  document.getElementById('tutorial-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  if (state.user) {
+    document.getElementById('workspace-name').textContent = 'סביבת העבודה של ' + state.user.name;
+    document.querySelector('.avatar').textContent = state.user.initials;
+    if (state.user.color) document.querySelector('.avatar').style.background = state.user.color;
+  }
+  initApp();
+  saveData();
+}
+
+function tutorialStep(dir) {
+  _tutorialStep += dir;
+  if (_tutorialStep < 0) _tutorialStep = 0;
+  if (_tutorialStep >= TUTORIAL_TOTAL) { finishTutorial(); return; }
+  showTutorialStep(_tutorialStep);
+}
+
+function showTutorialStep(n) {
+  for (let i = 0; i < TUTORIAL_TOTAL; i++) {
+    const el = document.getElementById('tstep-' + i);
+    if (el) el.style.display = i === n ? 'block' : 'none';
+  }
+  renderTutorialDots();
+  const prev = document.getElementById('tutorial-prev');
+  const next = document.getElementById('tutorial-next');
+  if (prev) prev.style.visibility = n === 0 ? 'hidden' : 'visible';
+  if (next) next.textContent = n === TUTORIAL_TOTAL - 1 ? '🚀 בואו נתחיל!' : 'הבנתי ←';
+  if (next && n === TUTORIAL_TOTAL - 1) { next.onclick = finishTutorial; } else { next.onclick = () => tutorialStep(1); }
+}
+
+function renderTutorialDots() {
+  const container = document.getElementById('tutorial-dots');
+  if (!container) return;
+  container.innerHTML = Array.from({length: TUTORIAL_TOTAL}, (_, i) =>
+    `<div style="width:${i===_tutorialStep?'24px':'8px'};height:8px;border-radius:4px;background:${i===_tutorialStep?'var(--accent)':'var(--border)'};transition:all 0.3s;"></div>`
+  ).join('');
+}
+
+// ============ ANALYTICS TABS ============
+let _analyticsTab = 'expense';
+let _catMonthlyChartInstance = null;
+
+function setAnalyticsTab(tab) {
+  _analyticsTab = tab;
+  ['expense','income','compare'].forEach(t => {
+    const btn = document.getElementById('an-tab-' + t);
+    if (btn) btn.className = 'type-btn' + (t === tab ? ` active-${t === 'expense' ? 'expense' : t === 'income' ? 'income' : 'transfer'}` : '');
+  });
+  const catCard = document.getElementById('an-cat-card');
+  if (catCard) catCard.style.display = tab === 'compare' ? 'none' : 'block';
+  hideCatDetail();
+  renderYearlyChart();
+  renderCatBreakdown();
+}
+
+// ============ ANALYTICS – IMPROVED CHART ============
+let yearlyChartInstance = null;
+
+function renderYearlyChart() {
+  const canvas = document.getElementById('yearlyChart');
+  if (!canvas) return;
+  if (yearlyChartInstance) { yearlyChartInstance.destroy(); yearlyChartInstance = null; }
+
+  const months = MONTHS.map(m => m.slice(0,3));
+  let datasets = [];
+  let titleText = '';
+
+  if (_analyticsTab === 'compare') {
+    // Income vs Expense per month – only months with data
+    const incomeData = months.map((_, mi) => {
+      return state.transactions.filter(t => t.type === 'income' && new Date(t.date).getMonth() === mi && new Date(t.date).getFullYear() === state.currentYear).reduce((s,t) => s+t.amount, 0);
+    });
+    const expenseData = months.map((_, mi) => {
+      return state.transactions.filter(t => t.type === 'expense' && new Date(t.date).getMonth() === mi && new Date(t.date).getFullYear() === state.currentYear).reduce((s,t) => s+t.amount, 0);
+    });
+    datasets = [
+      { label: 'הכנסות', data: incomeData, backgroundColor: 'rgba(46,204,113,0.7)', borderRadius: 6 },
+      { label: 'הוצאות', data: expenseData, backgroundColor: 'rgba(231,76,60,0.7)', borderRadius: 6 },
+    ];
+    titleText = `השוואה שנתית – ${state.currentYear}`;
+  } else {
+    const isIncome = _analyticsTab === 'income';
+    const data = months.map((_, mi) => {
+      return state.transactions.filter(t => t.type === (isIncome ? 'income' : 'expense') && new Date(t.date).getMonth() === mi && new Date(t.date).getFullYear() === state.currentYear).reduce((s,t) => s+t.amount, 0);
+    });
+    const color = isIncome ? 'rgba(46,204,113,0.7)' : 'rgba(231,76,60,0.7)';
+    datasets = [{ label: isIncome ? 'הכנסות' : 'הוצאות', data, backgroundColor: color, borderRadius: 6 }];
+    titleText = `${isIncome ? 'הכנסות' : 'הוצאות'} לפי חודש – ${state.currentYear}`;
+  }
+
+  const titleEl = document.getElementById('yearly-chart-title');
+  if (titleEl) titleEl.textContent = titleText;
+
+  yearlyChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: { labels: months, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (e, els) => {
+        if (els.length) {
+          const mi = els[0].index;
+          showMonthDetail(mi);
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#8b92b8', font: { family: 'Heebo' } } },
+        tooltip: { callbacks: { label: ctx => '₪' + ctx.raw.toLocaleString() } }
+      },
+      scales: {
+        x: { ticks: { color: '#555c7a', font: { family: 'Heebo', size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#555c7a', font: { family: 'Heebo', size: 10 }, callback: v => v > 0 ? '₪' + (v/1000).toFixed(0) + 'K' : '' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+}
+
+function showMonthDetail(monthIndex) {
+  const container = document.getElementById('yearly-month-list');
+  if (!container) return;
+  const isIncome = _analyticsTab === 'income';
+  const type = _analyticsTab === 'compare' ? null : (_analyticsTab === 'income' ? 'income' : 'expense');
+  const txs = state.transactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === monthIndex && d.getFullYear() === state.currentYear && (type === null || t.type === type);
+  });
+  const total = txs.reduce((s,t) => s+t.amount, 0);
+  container.style.display = 'block';
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-top:8px;border-top:1px solid var(--border);">
+      <div style="font-size:14px;font-weight:600;">${MONTHS[monthIndex]} ${state.currentYear}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:14px;font-weight:700;color:${isIncome?'var(--green)':'var(--red)'}">₪${total.toLocaleString()}</span>
+        <span style="cursor:pointer;color:var(--text3);font-size:18px" onclick="document.getElementById('yearly-month-list').style.display='none'">×</span>
+      </div>
+    </div>
+    ${txs.length === 0 ? '<div style="color:var(--text3);font-size:13px;text-align:center;padding:8px">אין נתונים</div>' :
+      txs.reverse().map(tx => {
+        const cats = tx.type === 'income' ? state.incomeCategories : state.categories;
+        const cat = cats.find(c => c.id === tx.catId) || {};
+        const d = new Date(tx.date);
+        return `<div class="tx-item" onclick="editTx(${tx.id})">
+          <div class="tx-icon" style="background:${cat.color||'#555'}22">${cat.icon||'💰'}</div>
+          <div class="tx-info"><div class="tx-name">${tx.name}</div><div class="tx-details">${d.getDate()}/${d.getMonth()+1}</div></div>
+          <div class="tx-amount ${tx.type==='income'?'pos':'neg'}">${tx.type==='income'?'+':'-'} ₪${tx.amount.toLocaleString()}</div>
+        </div>`;
+      }).join('')
+    }
+  `;
+}
+
+// ============ CATEGORY BREAKDOWN ============
+function renderCatBreakdown() {
+  if (_analyticsTab === 'compare') return;
+  const isIncome = _analyticsTab === 'income';
+  const txType = isIncome ? 'income' : 'expense';
+  const cats = isIncome ? state.incomeCategories : state.categories;
+  const txs = getMonthTxs().filter(t => t.type === txType);
+  const totals = {};
+  txs.forEach(t => { totals[t.catId] = (totals[t.catId] || 0) + t.amount; });
+  const total = Object.values(totals).reduce((s,v) => s+v, 0);
+
+  const titleEl = document.getElementById('cat-breakdown-title');
+  const totalEl = document.getElementById('cat-month-total');
+  if (titleEl) titleEl.textContent = `${isIncome?'הכנסות':'הוצאות'} לפי קטגוריה – ${MONTHS[state.currentMonth]}`;
+  if (totalEl) { totalEl.textContent = total ? `₪${total.toLocaleString()}` : ''; totalEl.style.color = isIncome ? 'var(--green)' : 'var(--red)'; }
+
+  const container = document.getElementById('cat-breakdown-list');
+  if (!container) return;
+
+  const items = cats.map(cat => ({ cat, total: totals[cat.id] || 0 })).filter(i => i.total > 0).sort((a,b) => b.total - a.total);
+
+  if (!items.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">אין נתונים לחודש זה</div></div>';
+    return;
+  }
+
+  container.innerHTML = items.map(({ cat, total: catTotal }) => {
+    const pct = total ? Math.round((catTotal / total) * 100) : 0;
+    return `<div onclick="showCatDetail(${cat.id})" style="margin-bottom:14px;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;"><span>${cat.icon}</span><span style="font-size:14px;font-weight:500;">${cat.name}</span></div>
+        <div style="text-align:left;">
+          <span style="font-size:14px;font-weight:600;color:${isIncome?'var(--green)':'var(--red)'}">₪${catTotal.toLocaleString()}</span>
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">${pct}%</span>
+        </div>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:3px;">
+        <div style="height:100%;width:${pct}%;background:${cat.color};border-radius:3px;"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showCatDetail(catId) {
+  const isIncome = _analyticsTab === 'income';
+  const cats = isIncome ? state.incomeCategories : state.categories;
+  const cat = cats.find(c => c.id === catId);
+  if (!cat) return;
+
+  // All transactions for this category across all months in current year
+  const allTxs = state.transactions.filter(t => t.catId === catId && t.type === (isIncome?'income':'expense') && new Date(t.date).getFullYear() === state.currentYear);
+  const monthlyTotals = Array(12).fill(0);
+  allTxs.forEach(t => { monthlyTotals[new Date(t.date).getMonth()] += t.amount; });
+
+  const monthTxs = getMonthTxs().filter(t => t.catId === catId && t.type === (isIncome?'income':'expense'));
+  const total = monthTxs.reduce((s,t) => s+t.amount, 0);
+
+  const detail = document.getElementById('cat-tx-detail');
+  const titleEl = document.getElementById('cat-tx-title');
+  const listEl = document.getElementById('cat-tx-list');
+  if (!detail) return;
+
+  titleEl.innerHTML = `${cat.icon} ${cat.name} – <span style="color:${isIncome?'var(--green)':'var(--red)'}">₪${total.toLocaleString()}</span>`;
+
+  // Render category monthly chart
+  const catCanvas = document.getElementById('catMonthlyChart');
+  if (catCanvas) {
+    if (_catMonthlyChartInstance) { _catMonthlyChartInstance.destroy(); _catMonthlyChartInstance = null; }
+    _catMonthlyChartInstance = new Chart(catCanvas, {
+      type: 'line',
+      data: {
+        labels: MONTHS.map(m => m.slice(0,3)),
+        datasets: [{ label: cat.name, data: monthlyTotals, borderColor: cat.color, backgroundColor: cat.color + '22', fill: true, tension: 0.3, pointRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₪' + ctx.raw.toLocaleString() } } },
+        scales: {
+          x: { ticks: { color: '#555c7a', font: { family: 'Heebo', size: 9 } }, grid: { display: false } },
+          y: { ticks: { color: '#555c7a', font: { family: 'Heebo', size: 9 }, callback: v => v > 0 ? '₪' + v.toLocaleString() : '' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+  }
+
+  listEl.innerHTML = monthTxs.length ? monthTxs.reverse().map(tx => {
+    const d = new Date(tx.date);
+    return `<div class="tx-item" onclick="editTx(${tx.id})">
+      <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="tx-info"><div class="tx-name">${tx.name}</div><div class="tx-details">${d.getDate()}/${d.getMonth()+1}${tx.note?' • '+tx.note:''}</div></div>
+      <div class="tx-amount ${isIncome?'pos':'neg'}">${isIncome?'+':'-'} ₪${tx.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:13px;padding:8px;text-align:center">אין פעולות החודש</div>';
+
+  detail.style.display = 'block';
+  detail.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideCatDetail() {
+  const detail = document.getElementById('cat-tx-detail');
+  if (detail) detail.style.display = 'none';
+}
+
+// ============ HELP MODAL ============
+function showHelp() {
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div class="modal-title" style="margin-bottom:0">❓ מדריך עזרה</div>
+      <span style="font-size:24px;cursor:pointer;color:var(--text3)" onclick="closeModal()">×</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${[
+        ['🏦','הוספת חשבון בנק','הגדרות ← חשבונות בנק ← + הוסף. הכנס שם, יתרה וצבע.'],
+        ['💳','הוספת כרטיס אשראי','הגדרות ← כרטיסי אשראי ← + הוסף. הגדר תאריך חיוב ומאיזה בנק יורד.'],
+        ['➕','הוספת פעולה','לחץ על כפתור + (עיגול סגול בתחתית). בחר הוצאה/הכנסה/העברה.'],
+        ['✏️','עריכת פעולה','לחץ על כל פעולה ברשימה כדי לערוך או למחוק אותה.'],
+        ['📌','הוצאות קבועות','הגדרות ← הוצאות קבועות. הן ייחויבו אוטומטית כל חודש.'],
+        ['🔔','התראות','הגדרות ← התראות. הגדר כמה ימים לפני חיוב ותזכורת יומית.'],
+        ['👥','הזמנת בן/בת זוג','הגדרות ← סביבת עבודה ← הזמן. שלח קישור.'],
+        ['📊','ניתוח נתונים','לחץ על כרטיס קטגוריה לראות גרף חודשי ורשימת פעולות.'],
+        ['🚦','צבעי חשבון בנק','ירוק=בסדר, צהוב=שים לב, כתום=מעט, אדום=מינוס.'],
+      ].map(([icon, title, desc]) => `
+        <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px;display:flex;gap:10px;align-items:flex-start;">
+          <span style="font-size:20px;flex-shrink:0">${icon}</span>
+          <div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:2px">${title}</div>
+            <div style="font-size:12px;color:var(--text2)">${desc}</div>
+          </div>
+        </div>
+      `).join('')}
+      <button class="submit-btn" style="margin-top:4px" onclick="closeModal();startTutorial();">🎓 הצג סיור מודרך מחדש</button>
+    </div>
+  `);
+}
+
+// ============ SERVICE WORKER ============
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
 // ============ MODAL ENGINE ============
 function showModal(html) {
   const overlay = document.createElement('div');
@@ -2201,14 +2723,6 @@ function showNotification(msg, type = 'info') {
   el.style.borderColor = colors[type] || '#6c63ff';
   el.innerHTML = `<div class="notification-text">${msg}</div><div class="notification-close" onclick="this.parentElement.remove()">×</div>`;
   document.getElementById('notification-container').appendChild(el);
-  setTimeout(() => el.remove(), 3500);
+  setTimeout(() => { if (el.parentElement) el.remove(); }, 3500);
 }
-
-// ============ SERVICE WORKER ============
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
-
-</script>
-</body>
 </html>
