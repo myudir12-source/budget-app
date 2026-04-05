@@ -1199,9 +1199,9 @@
 <div id="notification-container"></div>
 
 <!-- FIREBASE (compat version - no modules, works with onclick) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyBAuOsbQi19pQOl7sLJMTCDcoc6h8n-WaY",
@@ -1353,12 +1353,12 @@ function loginGoogle() {
   // handled by Firebase module via button event listener
 }
 
-function loginDemo() {
+window.loginDemo = function() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('onboarding-screen').style.display = 'flex';
 }
 
-function submitOnboarding() {
+window.submitOnboarding = function() {
   const name = document.getElementById('onboard-username').value.trim();
   if (!name) { alert('נא להזין שם משתמש'); return; }
   const colors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
@@ -1374,7 +1374,7 @@ function submitOnboarding() {
   showTutorialStep(0);
 }
 
-function logout() {
+window.logout = function() {
   if (window._logout) { window._logout(); return; }
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('onboarding-screen').style.display = 'none';
@@ -2411,6 +2411,7 @@ function startTutorial() {
   renderTutorialDots();
   showTutorialStep(0);
 }
+window.startTutorial = startTutorial;
 
 function finishTutorial() {
   document.getElementById('tutorial-screen').style.display = 'none';
@@ -2423,6 +2424,7 @@ function finishTutorial() {
   initApp();
   saveData();
 }
+window.finishTutorial = finishTutorial;
 
 function tutorialStep(dir) {
   _tutorialStep += dir;
@@ -2430,6 +2432,7 @@ function tutorialStep(dir) {
   if (_tutorialStep >= TUTORIAL_TOTAL) { finishTutorial(); return; }
   showTutorialStep(_tutorialStep);
 }
+window.tutorialStep = tutorialStep;
 
 function showTutorialStep(n) {
   for (let i = 0; i < TUTORIAL_TOTAL; i++) {
@@ -2732,4 +2735,22 @@ function showNotification(msg, type = 'info') {
   document.getElementById('notification-container').appendChild(el);
   setTimeout(() => { if (el.parentElement) el.remove(); }, 3500);
 }
+
+// ============ EXPOSE ALL FUNCTIONS TO WINDOW ============
+// This fixes "X is not defined" errors from onclick attributes
+const _expose = [
+  'changeMonth','closeModal','copyInvite','deleteBank','deleteCat','deleteCreditCard',
+  'deleteFixed','deleteIncomeCat','deleteTx','editApproveAmount','editBank','editCreditCard',
+  'editFixed','editTx','fixBankBalance','hideCatDetail','loginDemo','loginGoogle','logout',
+  'saveDailyNotif','saveEditCreditCard','saveEditFixed','saveEditTx','saveNotifSettings',
+  'saveUsername','selectColor','selectEmoji','setAnalyticsTab','setApproveMode','setTxType',
+  'showAddBankModal','showAddCatModal','showAddCreditModal','showAddFixedModal',
+  'showAddIncomeCatModal','showAddTxModal','showApproveModal','showBankDetail',
+  'showCatDetail','showDailyNotif','showEditUsername','showHelp','showInviteModal',
+  'showNotifSettings','showPage','startTutorial','submitAddBank','submitAddCat',
+  'submitAddCredit','submitAddFixed','submitApprove','submitOnboarding','submitTx',
+  'toggleApprove','tutorialStep','finishTutorial','showModal','showNotification',
+  'renderTutorialDots','showTutorialStep','renderCatBreakdown','renderYearlyChart'
+];
+_expose.forEach(fn => { if (typeof window[fn] === 'undefined' && typeof eval(fn) === 'function') window[fn] = eval(fn); });
 </html>
