@@ -992,6 +992,110 @@
 <div id="modal-container"></div>
 <div id="notification-container"></div>
 
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBAuOsbQi19pQOl7sLJMTCDcoc6h8n-WaY",
+  authDomain: "family-budget-4c168.firebaseapp.com",
+  projectId: "family-budget-4c168",
+  storageBucket: "family-budget-4c168.firebasestorage.app",
+  messagingSenderId: "141767275617",
+  appId: "1:141767275617:web:a8db5e6d99ae24b0186620"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window._firebase = { auth, db, doc, setDoc, getDoc, onSnapshot, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged };
+
+// Auto-login check
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    window._firebaseUser = user;
+    await loadUserData(user.uid);
+  }
+});
+
+async function loadUserData(uid) {
+  const userRef = doc(db, 'users', uid, 'data', 'main');
+  const snap = await getDoc(userRef);
+  if (snap.exists()) {
+    const data = snap.data();
+    // Merge saved data into state
+    if (data.banks) state.banks = data.banks;
+    if (data.creditCards) state.creditCards = data.creditCards;
+    if (data.fixedExpenses) state.fixedExpenses = data.fixedExpenses;
+    if (data.transactions) state.transactions = data.transactions;
+    if (data.categories) state.categories = data.categories;
+    if (data.incomeCategories) state.incomeCategories = data.incomeCategories;
+    if (data.members) state.members = data.members;
+    if (data.user) {
+      state.user = data.user;
+      // Skip onboarding, go straight to app
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('onboarding-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('workspace-name').textContent = 'סביבת העבודה של ' + data.user.name;
+      document.querySelector('.avatar').textContent = data.user.initials;
+      if (data.user.color) document.querySelector('.avatar').style.background = data.user.color;
+      initApp();
+    }
+  } else {
+    // New user – show onboarding
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('onboarding-screen').style.display = 'flex';
+  }
+}
+
+window._saveToFirebase = async function() {
+  if (!window._firebaseUser) return;
+  const uid = window._firebaseUser.uid;
+  const userRef = doc(db, 'users', uid, 'data', 'main');
+  await setDoc(userRef, {
+    user: state.user,
+    banks: state.banks,
+    creditCards: state.creditCards,
+    fixedExpenses: state.fixedExpenses,
+    transactions: state.transactions,
+    categories: state.categories,
+    incomeCategories: state.incomeCategories,
+    members: state.members,
+    notifDaysBefore: state.notifDaysBefore,
+    dailyReminderTime: state.dailyReminderTime,
+    savedAt: new Date().toISOString(),
+  });
+};
+
+window._googleLogin = async function() {
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    window._firebaseUser = result.user;
+    await loadUserData(result.user.uid);
+  } catch(e) {
+    showNotification('❌ שגיאה בכניסה: ' + e.message, 'warn');
+  }
+};
+
+window._logout = async function() {
+  await signOut(auth);
+  window._firebaseUser = null;
+  state.user = null;
+  state.banks = [];
+  state.creditCards = [];
+  state.fixedExpenses = [];
+  state.transactions = [];
+  state.members = [];
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+};
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 
@@ -1030,8 +1134,11 @@ let state = {
 
 // ============ AUTH ============
 function loginGoogle() {
-  showNotification('🔒 Google Login יחובר ב-production', 'info');
-  loginDemo();
+  if (window._googleLogin) {
+    window._googleLogin();
+  } else {
+    setTimeout(() => { if (window._googleLogin) window._googleLogin(); else showNotification('⏳ טוען... נסה שוב', 'warn'); }, 1500);
+  }
 }
 
 function loginDemo() {
@@ -1044,7 +1151,7 @@ function submitOnboarding() {
   if (!name) { alert('נא להזין שם משתמש'); return; }
   const colors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
   const color = colors[state.members.length % colors.length];
-  state.user = { name, email: 'demo@app.com', initials: name[0].toUpperCase(), color };
+  state.user = { name, email: window._firebaseUser?.email || 'demo@app.com', initials: name[0].toUpperCase(), color };
   if (!state.members.find(m => m.name === name)) {
     state.members.push({ name, initials: name[0].toUpperCase(), color, role: state.members.length === 0 ? 'מנהל' : 'חבר' });
   }
@@ -1054,12 +1161,22 @@ function submitOnboarding() {
   document.querySelector('.avatar').textContent = state.user.initials;
   document.querySelector('.avatar').style.background = color;
   initApp();
+  saveData();
 }
 
 function logout() {
+  if (window._logout) { window._logout(); return; }
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('onboarding-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
+}
+
+function saveData() {
+  if (window._saveToFirebase) {
+    window._saveToFirebase();
+  } else {
+    try { localStorage.setItem('budget_state', JSON.stringify({ user: state.user, banks: state.banks, creditCards: state.creditCards, fixedExpenses: state.fixedExpenses, transactions: state.transactions, categories: state.categories, incomeCategories: state.incomeCategories, members: state.members })); } catch(e) {}
+  }
 }
 
 function showEditUsername() {
@@ -1085,6 +1202,7 @@ function saveUsername() {
   document.querySelector('.avatar').textContent = state.user.initials;
   closeModal();
   renderSettings();
+  saveData();
   showNotification('✅ שם משתמש עודכן', 'success');
 }
 
@@ -1476,8 +1594,10 @@ function showAddTxModal() {
   const cats = state.categories;
   const incomeCats = state.incomeCategories;
   showModal(`
-    <div class="modal-handle"></div>
-    <div class="modal-title">פעולה חדשה</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="modal-title" style="margin-bottom:0">פעולה חדשה</div>
+      <span style="font-size:26px;cursor:pointer;color:var(--text3)" onclick="closeModal()">×</span>
+    </div>
     <div class="type-toggle">
       <button class="type-btn active-expense" id="btn-expense" onclick="setTxType('expense')">הוצאה</button>
       <button class="type-btn" id="btn-income" onclick="setTxType('income')">הכנסה</button>
@@ -1588,6 +1708,7 @@ function submitTx() {
   renderCreditCards();
   renderRecentTx();
   updateBalance();
+  saveData();
   showNotification('✅ הפעולה נוספה בהצלחה', 'success');
 }
 
@@ -1683,6 +1804,7 @@ function submitApprove() {
   renderBankCards();
   renderRecentTx();
   updateBalance();
+  saveData();
   showNotification(`✅ ${approved.length} חיובים אושרו`, 'success');
 }
 
@@ -1714,6 +1836,7 @@ function submitAddBank() {
   closeModal();
   renderBankCards();
   renderSettings();
+  saveData();
   showNotification('✅ חשבון הבנק נוסף', 'success');
 }
 
@@ -1740,6 +1863,7 @@ function submitAddCredit() {
   closeModal();
   renderCreditCards();
   renderSettings();
+  saveData();
   showNotification('✅ כרטיס נוסף', 'success');
 }
 
@@ -1779,6 +1903,7 @@ function submitAddFixed() {
   closeModal();
   renderSettings();
   renderUpcoming();
+  saveData();
   showNotification('✅ הוצאה קבועה נוספה', 'success');
 }
 
@@ -1823,15 +1948,16 @@ function submitAddCat(isIncome) {
   if (isIncome) state.incomeCategories.push(newCat); else state.categories.push(newCat);
   closeModal();
   renderSettings();
+  saveData();
   showNotification('✅ קטגוריה נוספה', 'success');
 }
 
 // ============ DELETE ACTIONS ============
-function deleteBank(id) { if(confirm('למחוק חשבון זה?')) { state.banks = state.banks.filter(b=>b.id!==id); renderBankCards(); renderSettings(); } }
-function deleteCreditCard(id) { if(confirm('למחוק כרטיס זה?')) { state.creditCards = state.creditCards.filter(c=>c.id!==id); renderCreditCards(); renderSettings(); } }
-function deleteFixed(id) { if(confirm('למחוק הוצאה קבועה זו?')) { state.fixedExpenses = state.fixedExpenses.filter(f=>f.id!==id); renderUpcoming(); renderSettings(); } }
-function deleteCat(id) { state.categories = state.categories.filter(c=>c.id!==id); renderSettings(); }
-function deleteIncomeCat(id) { state.incomeCategories = state.incomeCategories.filter(c=>c.id!==id); renderSettings(); }
+function deleteBank(id) { if(confirm('למחוק חשבון זה?')) { state.banks = state.banks.filter(b=>b.id!==id); renderBankCards(); renderSettings(); saveData(); } }
+function deleteCreditCard(id) { if(confirm('למחוק כרטיס זה?')) { state.creditCards = state.creditCards.filter(c=>c.id!==id); renderCreditCards(); renderSettings(); saveData(); } }
+function deleteFixed(id) { if(confirm('למחוק הוצאה קבועה זו?')) { state.fixedExpenses = state.fixedExpenses.filter(f=>f.id!==id); renderUpcoming(); renderSettings(); saveData(); } }
+function deleteCat(id) { state.categories = state.categories.filter(c=>c.id!==id); renderSettings(); saveData(); }
+function deleteIncomeCat(id) { state.incomeCategories = state.incomeCategories.filter(c=>c.id!==id); renderSettings(); saveData(); }
 
 function editCreditCard(id) {
   const cc = state.creditCards.find(c => c.id === id);
@@ -1860,6 +1986,7 @@ function saveEditCreditCard(id) {
   closeModal();
   renderCreditCards();
   renderSettings();
+  saveData();
   showNotification('✅ כרטיס עודכן', 'success');
 }
 
@@ -1901,6 +2028,7 @@ function saveEditFixed(id) {
   closeModal();
   renderUpcoming();
   renderSettings();
+  saveData();
   showNotification('✅ הוצאה קבועה עודכנה', 'success');
 }
 
@@ -1938,6 +2066,7 @@ function saveEditTx(id) {
   renderRecentTx();
   renderAllTx();
   updateBalance();
+  saveData();
   showNotification('✅ פעולה עודכנה', 'success');
 }
 
@@ -1948,6 +2077,7 @@ function deleteTx(id) {
   renderRecentTx();
   renderAllTx();
   updateBalance();
+  saveData();
   showNotification('🗑 פעולה נמחקה', 'success');
 }
 
