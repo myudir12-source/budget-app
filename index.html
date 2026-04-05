@@ -848,16 +848,28 @@
 
     <!-- YEARLY CHART -->
     <div class="card">
-      <div class="card-title">הכנסות מול הוצאות – 2026</div>
+      <div class="card-title" id="yearly-chart-title">הכנסות מול הוצאות – 2026</div>
       <div class="chart-container">
         <canvas id="yearlyChart"></canvas>
       </div>
     </div>
 
-    <!-- CATEGORY BREAKDOWN -->
+    <!-- MONTHLY SUMMARY -->
     <div class="card">
-      <div class="card-title">פירוט לפי קטגוריה</div>
-      <div class="cat-grid" id="cat-breakdown"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0" id="cat-breakdown-title">הוצאות לפי קטגוריה</div>
+        <div id="cat-month-total" style="font-size:14px;font-weight:600;color:var(--red)"></div>
+      </div>
+      <div id="cat-breakdown-list"></div>
+    </div>
+
+    <!-- CATEGORY TX LIST -->
+    <div class="card" id="cat-tx-detail" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title" id="cat-tx-title">פעולות</div>
+        <span style="color:var(--accent);cursor:pointer;font-size:13px" onclick="hideCatDetail()">סגור ×</span>
+      </div>
+      <div id="cat-tx-list"></div>
     </div>
   </div>
 
@@ -879,10 +891,7 @@
           </div>
           <span style="font-size:13px;color:var(--accent);cursor:pointer;" onclick="showEditUsername()">שנה שם</span>
         </div>
-        <div class="members-row" id="members-list">
-          <div class="member-chip"><div class="member-avatar">י</div> יהודה</div>
-          <div class="member-chip"><div class="member-avatar" style="background:linear-gradient(135deg,#e74c3c,#e91e63)">ח</div> חיני</div>
-        </div>
+        <div class="members-row" id="members-list"></div>
         <button style="width:100%;margin-top:12px;padding:10px;background:var(--bg3);border:1px dashed var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;" onclick="showInviteModal()">+ הזמן בן/בת זוג</button>
       </div>
     </div>
@@ -991,17 +1000,8 @@ let state = {
   user: null,
   currentMonth: new Date().getMonth(),
   currentYear: new Date().getFullYear(),
-  banks: [
-    { id: 1, name: 'לאומי', balance: 8200, color: '#2ecc71' },
-    { id: 2, name: 'דיסקונט', balance: 3400, color: '#f39c12' },
-    { id: 3, name: 'מרכנתיל', balance: 26400, color: '#6c63ff' },
-    { id: 4, name: 'מזומן', balance: 600, color: '#4ecdc4' },
-  ],
-  creditCards: [
-    { id: 1, name: 'ויזה לאומי', chargeDate: 10, bankId: 1, spent: 3240 },
-    { id: 2, name: 'מאסטרקארד דיסקונט', chargeDate: 15, bankId: 2, spent: 5180 },
-    { id: 3, name: 'מקס', chargeDate: 20, bankId: 2, spent: 2505 },
-  ],
+  banks: [],
+  creditCards: [],
   categories: [
     { id: 1, name: 'משכנתא והלוואות', color: '#e74c3c', icon: '🏠' },
     { id: 2, name: 'מזון ומכולת', color: '#27ae60', icon: '🛒' },
@@ -1020,27 +1020,12 @@ let state = {
     { id: 3, name: 'קצבאות', color: '#4ecdc4', icon: '👶' },
     { id: 4, name: 'אחר', color: '#607d8b', icon: '➕' },
   ],
-  fixedExpenses: [
-    { id: 1, name: 'משכנתא לאומי', amount: 3496, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 1 },
-    { id: 2, name: 'משכנתא מרכנתיל', amount: 5777, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 3 },
-    { id: 3, name: 'הלוואה מרכנתיל', amount: 1934, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 3 },
-    { id: 4, name: 'הלוואה דיסקונט', amount: 1699, dayOfMonth: 15, catId: 1, paymentMethod: 'bank', bankId: 2 },
-    { id: 5, name: 'הלוואה מקס', amount: 2505, dayOfMonth: 20, catId: 1, paymentMethod: 'credit', creditId: 3 },
-    { id: 6, name: 'שכירות', amount: 3850, dayOfMonth: 1, catId: 1, paymentMethod: 'bank', bankId: 2 },
-    { id: 7, name: 'מטפלת', amount: 3000, dayOfMonth: 5, catId: 4, paymentMethod: 'bank', bankId: 2 },
-    { id: 8, name: 'לימודים', amount: 1150, dayOfMonth: 10, catId: 8, paymentMethod: 'bank', bankId: 2 },
-  ],
-  transactions: [
-    { id: 1, type: 'income', date: '2026-04-01', name: 'משכורת יהודה', amount: 9000, catId: 1, bankId: 1, note: '' },
-    { id: 2, type: 'income', date: '2026-04-03', name: 'משכורת חיני', amount: 14429, catId: 1, bankId: 2, note: '' },
-    { id: 3, type: 'income', date: '2026-04-01', name: 'שכירויות', amount: 9200, catId: 2, bankId: 3, note: '' },
-    { id: 4, type: 'expense', date: '2026-04-02', name: 'שופרסל', amount: 420, catId: 2, paymentMethod: 'credit', creditId: 2, note: 'קניות שבועיות' },
-    { id: 5, type: 'expense', date: '2026-04-03', name: 'חשמל', amount: 675, catId: 3, paymentMethod: 'bank', bankId: 2, note: '' },
-    { id: 6, type: 'expense', date: '2026-04-04', name: 'מסעדה', amount: 280, catId: 5, paymentMethod: 'credit', creditId: 1, note: 'ארוחת ערב' },
-  ],
+  fixedExpenses: [],
+  transactions: [],
+  members: [],
   notifDaysBefore: 3,
   dailyReminderTime: '21:00',
-  approvalMode: 'all', // 'all' or 'one'
+  approvalMode: 'all',
 };
 
 // ============ AUTH ============
@@ -1057,11 +1042,17 @@ function loginDemo() {
 function submitOnboarding() {
   const name = document.getElementById('onboard-username').value.trim();
   if (!name) { alert('נא להזין שם משתמש'); return; }
-  state.user = { name, email: 'demo@app.com', initials: name[0].toUpperCase() };
+  const colors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
+  const color = colors[state.members.length % colors.length];
+  state.user = { name, email: 'demo@app.com', initials: name[0].toUpperCase(), color };
+  if (!state.members.find(m => m.name === name)) {
+    state.members.push({ name, initials: name[0].toUpperCase(), color, role: state.members.length === 0 ? 'מנהל' : 'חבר' });
+  }
   document.getElementById('onboarding-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('workspace-name').textContent = 'סביבת העבודה של ' + name;
   document.querySelector('.avatar').textContent = state.user.initials;
+  document.querySelector('.avatar').style.background = color;
   initApp();
 }
 
@@ -1263,7 +1254,7 @@ function renderTxList(txs, containerId) {
     const sign = isIncome ? '+' : '-';
     const cls = isIncome ? 'pos' : 'neg';
     const d = new Date(tx.date);
-    return `<div class="tx-item">
+    return `<div class="tx-item" onclick="editTx(${tx.id})">
       <div class="tx-icon" style="background:${cat.color || '#555'}22">${cat.icon || '💰'}</div>
       <div class="tx-info">
         <div class="tx-name">${tx.name}</div>
@@ -1312,22 +1303,78 @@ function renderCatBreakdown() {
   const txs = getMonthTxs().filter(t => t.type === 'expense');
   const totals = {};
   txs.forEach(t => { totals[t.catId] = (totals[t.catId] || 0) + t.amount; });
-  const container = document.getElementById('cat-breakdown');
+  const total = Object.values(totals).reduce((s,v) => s+v, 0);
+
+  const titleEl = document.getElementById('cat-breakdown-title');
+  const totalEl = document.getElementById('cat-month-total');
+  if (titleEl) titleEl.textContent = `הוצאות לפי קטגוריה – ${MONTHS[state.currentMonth]}`;
+  if (totalEl) totalEl.textContent = total ? `₪${total.toLocaleString()}` : '';
+
+  const container = document.getElementById('cat-breakdown-list');
   if (!container) return;
-  const items = state.categories.map(cat => ({ cat, total: totals[cat.id] || 0 })).filter(i => i.total > 0);
+
+  const items = state.categories
+    .map(cat => ({ cat, total: totals[cat.id] || 0 }))
+    .filter(i => i.total > 0)
+    .sort((a,b) => b.total - a.total);
+
   if (!items.length) {
-    container.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:20px;color:var(--text2)">אין נתונים</div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">אין נתונים לחודש זה</div></div>';
     return;
   }
-  container.innerHTML = items.map(({ cat, total }) =>
-    `<div class="cat-item">
-      <div class="cat-dot" style="background:${cat.color}"></div>
-      <div class="cat-info">
-        <div class="cat-name">${cat.icon} ${cat.name}</div>
-        <div class="cat-amount">₪ ${total.toLocaleString()}</div>
+
+  container.innerHTML = items.map(({ cat, total: catTotal }) => {
+    const pct = total ? Math.round((catTotal / total) * 100) : 0;
+    return `<div onclick="showCatDetail(${cat.id})" style="margin-bottom:14px;cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span>${cat.icon}</span>
+          <span style="font-size:14px;font-weight:500;">${cat.name}</span>
+        </div>
+        <div style="text-align:left;">
+          <span style="font-size:14px;font-weight:600;color:var(--red)">₪${catTotal.toLocaleString()}</span>
+          <span style="font-size:11px;color:var(--text3);margin-right:6px">${pct}%</span>
+        </div>
       </div>
-    </div>`
-  ).join('');
+      <div style="height:6px;background:var(--border);border-radius:3px;">
+        <div style="height:100%;width:${pct}%;background:${cat.color};border-radius:3px;transition:width 0.5s;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update chart title
+  const chartTitle = document.getElementById('yearly-chart-title');
+  if (chartTitle) chartTitle.textContent = `הכנסות מול הוצאות – ${state.currentYear}`;
+}
+
+function showCatDetail(catId) {
+  const cat = state.categories.find(c => c.id === catId);
+  if (!cat) return;
+  const txs = getMonthTxs().filter(t => t.type === 'expense' && t.catId === catId);
+  const total = txs.reduce((s,t) => s+t.amount, 0);
+  const detail = document.getElementById('cat-tx-detail');
+  const titleEl = document.getElementById('cat-tx-title');
+  const listEl = document.getElementById('cat-tx-list');
+  if (!detail) return;
+  titleEl.innerHTML = `${cat.icon} ${cat.name} – <span style="color:var(--red)">₪${total.toLocaleString()}</span>`;
+  listEl.innerHTML = txs.length ? txs.reverse().map(tx => {
+    const d = new Date(tx.date);
+    return `<div class="tx-item" onclick="editTx(${tx.id})">
+      <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="tx-info">
+        <div class="tx-name">${tx.name}</div>
+        <div class="tx-details">${d.getDate()}/${d.getMonth()+1}${tx.note?' • '+tx.note:''}</div>
+      </div>
+      <div class="tx-amount neg">- ₪${tx.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:13px;padding:8px">אין פעולות</div>';
+  detail.style.display = 'block';
+  detail.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideCatDetail() {
+  const detail = document.getElementById('cat-tx-detail');
+  if (detail) detail.style.display = 'none';
 }
 
 // ============ SETTINGS RENDER ============
@@ -1337,7 +1384,15 @@ function renderSettings() {
     const el = document.getElementById('settings-username');
     const av = document.getElementById('settings-avatar');
     if (el) el.textContent = state.user.name;
-    if (av) av.textContent = state.user.initials;
+    if (av) { av.textContent = state.user.initials; av.style.background = state.user.color || 'linear-gradient(135deg,#6c63ff,#4ecdc4)'; }
+  }
+
+  // Members
+  const membersList = document.getElementById('members-list');
+  if (membersList) {
+    membersList.innerHTML = state.members.map(m =>
+      `<div class="member-chip"><div class="member-avatar" style="background:${m.color}">${m.initials}</div> ${m.name} <span style="font-size:11px;color:var(--text3)">(${m.role})</span></div>`
+    ).join('');
   }
 
   // Banks
@@ -1351,11 +1406,11 @@ function renderSettings() {
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <span style="color:var(--text3);font-size:13px;cursor:pointer" onclick="editBank(${b.id})">עריכה</span>
+        <span style="color:var(--accent);font-size:13px;cursor:pointer" onclick="editBank(${b.id})">עריכה</span>
         <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteBank(${b.id})">מחק</span>
       </div>
     </div>`
-  ).join('');
+  ).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">אין חשבונות עדיין</div>';
 
   // Credits
   document.getElementById('settings-credits').innerHTML = state.creditCards.map(cc => {
@@ -1365,14 +1420,17 @@ function renderSettings() {
         <div class="settings-icon" style="background:rgba(108,99,255,0.15)">💳</div>
         <div>
           <div class="settings-item-name">${cc.name}</div>
-          <div class="settings-item-sub">יורד ב-${cc.chargeDate} • ${bank?.name}</div>
+          <div class="settings-item-sub">יורד ב-${cc.chargeDate} • ${bank?.name || '?'}</div>
         </div>
       </div>
-      <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteCreditCard(${cc.id})">מחק</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="color:var(--accent);font-size:13px;cursor:pointer" onclick="editCreditCard(${cc.id})">עריכה</span>
+        <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteCreditCard(${cc.id})">מחק</span>
+      </div>
     </div>`;
-  }).join('');
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">אין כרטיסים עדיין</div>';
 
-  // Fixed
+  // Fixed expenses
   document.getElementById('settings-fixed').innerHTML = state.fixedExpenses.map(fe => {
     const cat = state.categories.find(c => c.id === fe.catId) || {};
     return `<div class="settings-item">
@@ -1383,9 +1441,12 @@ function renderSettings() {
           <div class="settings-item-sub">₪${fe.amount.toLocaleString()} • יום ${fe.dayOfMonth}</div>
         </div>
       </div>
-      <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteFixed(${fe.id})">מחק</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="color:var(--accent);font-size:13px;cursor:pointer" onclick="editFixed(${fe.id})">עריכה</span>
+        <span style="color:var(--red);font-size:13px;cursor:pointer" onclick="deleteFixed(${fe.id})">מחק</span>
+      </div>
     </div>`;
-  }).join('');
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">אין הוצאות קבועות עדיין</div>';
 
   // Categories
   document.getElementById('settings-cats').innerHTML = state.categories.map(cat =>
@@ -1771,6 +1832,124 @@ function deleteCreditCard(id) { if(confirm('למחוק כרטיס זה?')) { sta
 function deleteFixed(id) { if(confirm('למחוק הוצאה קבועה זו?')) { state.fixedExpenses = state.fixedExpenses.filter(f=>f.id!==id); renderUpcoming(); renderSettings(); } }
 function deleteCat(id) { state.categories = state.categories.filter(c=>c.id!==id); renderSettings(); }
 function deleteIncomeCat(id) { state.incomeCategories = state.incomeCategories.filter(c=>c.id!==id); renderSettings(); }
+
+function editCreditCard(id) {
+  const cc = state.creditCards.find(c => c.id === id);
+  if (!cc) return;
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div class="modal-title" style="margin-bottom:0">עריכת כרטיס אשראי</div>
+      <span style="font-size:24px;cursor:pointer;color:var(--text3)" onclick="closeModal()">×</span>
+    </div>
+    <div class="form-group"><label class="form-label">שם הכרטיס</label><input class="form-input" id="edit-cc-name" value="${cc.name}"></div>
+    <div class="form-group"><label class="form-label">תאריך חיוב (יום בחודש)</label><input class="form-input" id="edit-cc-day" type="number" min="1" max="31" value="${cc.chargeDate}"></div>
+    <div class="form-group"><label class="form-label">חשבון בנק שממנו יורד</label>
+      <select class="form-select" id="edit-cc-bank">
+        ${state.banks.map(b=>`<option value="${b.id}" ${b.id===cc.bankId?'selected':''}>${b.name}</option>`).join('')}
+      </select>
+    </div>
+    <button class="submit-btn" onclick="saveEditCreditCard(${id})">שמור</button>
+  `);
+}
+
+function saveEditCreditCard(id) {
+  const cc = state.creditCards.find(c => c.id === id);
+  cc.name = document.getElementById('edit-cc-name').value;
+  cc.chargeDate = parseInt(document.getElementById('edit-cc-day').value);
+  cc.bankId = parseInt(document.getElementById('edit-cc-bank').value);
+  closeModal();
+  renderCreditCards();
+  renderSettings();
+  showNotification('✅ כרטיס עודכן', 'success');
+}
+
+function editFixed(id) {
+  const fe = state.fixedExpenses.find(f => f.id === id);
+  if (!fe) return;
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div class="modal-title" style="margin-bottom:0">עריכת הוצאה קבועה</div>
+      <span style="font-size:24px;cursor:pointer;color:var(--text3)" onclick="closeModal()">×</span>
+    </div>
+    <div class="form-group"><label class="form-label">שם</label><input class="form-input" id="edit-fe-name" value="${fe.name}"></div>
+    <div class="form-group"><label class="form-label">סכום (₪)</label><input class="form-input" id="edit-fe-amount" type="number" value="${fe.amount}"></div>
+    <div class="form-group"><label class="form-label">יום בחודש</label><input class="form-input" id="edit-fe-day" type="number" min="1" max="31" value="${fe.dayOfMonth}"></div>
+    <div class="form-group"><label class="form-label">קטגוריה</label>
+      <select class="form-select" id="edit-fe-cat">
+        ${state.categories.map(c=>`<option value="${c.id}" ${c.id===fe.catId?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">אמצעי תשלום</label>
+      <select class="form-select" id="edit-fe-payment">
+        ${state.creditCards.map(cc=>`<option value="credit_${cc.id}" ${fe.paymentMethod==='credit'&&fe.creditId===cc.id?'selected':''}>💳 ${cc.name}</option>`).join('')}
+        ${state.banks.map(b=>`<option value="bank_${b.id}" ${fe.paymentMethod==='bank'&&fe.bankId===b.id?'selected':''}>🏦 ${b.name}</option>`).join('')}
+      </select>
+    </div>
+    <button class="submit-btn" onclick="saveEditFixed(${id})">שמור</button>
+  `);
+}
+
+function saveEditFixed(id) {
+  const fe = state.fixedExpenses.find(f => f.id === id);
+  fe.name = document.getElementById('edit-fe-name').value;
+  fe.amount = parseFloat(document.getElementById('edit-fe-amount').value);
+  fe.dayOfMonth = parseInt(document.getElementById('edit-fe-day').value);
+  fe.catId = parseInt(document.getElementById('edit-fe-cat').value);
+  const payment = document.getElementById('edit-fe-payment').value;
+  if (payment.startsWith('credit_')) { fe.paymentMethod = 'credit'; fe.creditId = parseInt(payment.split('_')[1]); delete fe.bankId; }
+  else { fe.paymentMethod = 'bank'; fe.bankId = parseInt(payment.split('_')[1]); delete fe.creditId; }
+  closeModal();
+  renderUpcoming();
+  renderSettings();
+  showNotification('✅ הוצאה קבועה עודכנה', 'success');
+}
+
+function editTx(id) {
+  const tx = state.transactions.find(t => t.id === id);
+  if (!tx) return;
+  const cats = tx.type === 'income' ? state.incomeCategories : state.categories;
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div class="modal-title" style="margin-bottom:0">עריכת פעולה</div>
+      <span style="font-size:24px;cursor:pointer;color:var(--text3)" onclick="closeModal()">×</span>
+    </div>
+    <div class="form-group"><label class="form-label">תיאור</label><input class="form-input" id="edit-tx-name" value="${tx.name}"></div>
+    <div class="form-group"><label class="form-label">סכום (₪)</label><input class="form-input" id="edit-tx-amount" type="number" value="${tx.amount}"></div>
+    <div class="form-group"><label class="form-label">תאריך</label><input class="form-input" id="edit-tx-date" type="date" value="${tx.date}"></div>
+    <div class="form-group"><label class="form-label">קטגוריה</label>
+      <select class="form-select" id="edit-tx-cat">
+        ${cats.map(c=>`<option value="${c.id}" ${c.id===tx.catId?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">הערה</label><input class="form-input" id="edit-tx-note" value="${tx.note||''}"></div>
+    <button class="submit-btn" onclick="saveEditTx(${id})">שמור</button>
+    <button onclick="deleteTx(${id})" style="width:100%;margin-top:8px;padding:12px;background:transparent;border:1px solid rgba(231,76,60,0.3);border-radius:var(--radius-sm);color:var(--red);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;">🗑 מחק פעולה</button>
+  `);
+}
+
+function saveEditTx(id) {
+  const tx = state.transactions.find(t => t.id === id);
+  tx.name = document.getElementById('edit-tx-name').value;
+  tx.amount = parseFloat(document.getElementById('edit-tx-amount').value);
+  tx.date = document.getElementById('edit-tx-date').value;
+  tx.catId = parseInt(document.getElementById('edit-tx-cat').value);
+  tx.note = document.getElementById('edit-tx-note').value;
+  closeModal();
+  renderRecentTx();
+  renderAllTx();
+  updateBalance();
+  showNotification('✅ פעולה עודכנה', 'success');
+}
+
+function deleteTx(id) {
+  if (!confirm('למחוק פעולה זו?')) return;
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  closeModal();
+  renderRecentTx();
+  renderAllTx();
+  updateBalance();
+  showNotification('🗑 פעולה נמחקה', 'success');
+}
 
 // ============ INVITE MODAL ============
 function showInviteModal() {
