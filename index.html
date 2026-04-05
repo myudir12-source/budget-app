@@ -1307,6 +1307,28 @@ window.logout = async function() {
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 };
+
+// These must be defined early (before main script) so onclick works
+window.loginDemo = function() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('onboarding-screen').style.display = 'flex';
+};
+
+window.submitOnboarding = function() {
+  const name = document.getElementById('onboard-username').value.trim();
+  if (!name) { alert('נא להזין שם משתמש'); return; }
+  const colors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
+  const color = colors[(window.state?.members?.length || 0) % colors.length];
+  window.state.user = { name, email: window._firebaseUser?.email || 'demo@app.com', initials: name[0].toUpperCase(), color };
+  if (!window.state.members.find(m => m.name === name)) {
+    window.state.members.push({ name, initials: name[0].toUpperCase(), color, role: window.state.members.length === 1 ? 'מנהל' : 'חבר' });
+  }
+  document.getElementById('onboarding-screen').style.display = 'none';
+  document.getElementById('tutorial-screen').style.display = 'block';
+  if (typeof _tutorialStep !== 'undefined') _tutorialStep = 0;
+  if (window.renderTutorialDots) window.renderTutorialDots();
+  if (window.showTutorialStep) window.showTutorialStep(0);
+};
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
