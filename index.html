@@ -732,6 +732,20 @@
   </div>
 </div>
 
+<!-- ONBOARDING – USERNAME -->
+<div id="onboarding-screen" style="display:none;min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(108,99,255,0.15) 0%,transparent 70%);">
+  <div style="font-size:48px;margin-bottom:12px;">👤</div>
+  <div style="font-size:26px;font-weight:800;margin-bottom:8px;">איך קוראים לך?</div>
+  <div style="color:var(--text2);font-size:15px;margin-bottom:36px;text-align:center;">בחר שם משתמש שיוצג לשאר חברי הסביבה</div>
+  <div class="auth-card">
+    <div class="form-group">
+      <label class="form-label">שם משתמש</label>
+      <input class="form-input" id="onboard-username" placeholder="לדוגמה: יהודה" style="font-size:18px;text-align:center;" maxlength="20">
+    </div>
+    <button class="submit-btn" onclick="submitOnboarding()">המשך ←</button>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <!-- TOP BAR -->
@@ -855,12 +869,15 @@
     <div class="settings-section">
       <div class="settings-title">סביבת עבודה</div>
       <div class="card" style="margin-bottom:0;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-          <div class="avatar" style="width:48px;height:48px;font-size:18px;">י</div>
-          <div>
-            <div style="font-weight:600;">יהודה רוטשטיין</div>
-            <div style="font-size:13px;color:var(--text2);">מנהל</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="avatar" style="width:48px;height:48px;font-size:18px;" id="settings-avatar">י</div>
+            <div>
+              <div style="font-weight:600;" id="settings-username">יהודה</div>
+              <div style="font-size:13px;color:var(--text2);">מנהל</div>
+            </div>
           </div>
+          <span style="font-size:13px;color:var(--accent);cursor:pointer;" onclick="showEditUsername()">שנה שם</span>
         </div>
         <div class="members-row" id="members-list">
           <div class="member-chip"><div class="member-avatar">י</div> יהודה</div>
@@ -1033,15 +1050,51 @@ function loginGoogle() {
 }
 
 function loginDemo() {
-  state.user = { name: 'יהודה רוטשטיין', email: 'demo@tripease.app', initials: 'י' };
   document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('onboarding-screen').style.display = 'flex';
+}
+
+function submitOnboarding() {
+  const name = document.getElementById('onboard-username').value.trim();
+  if (!name) { alert('נא להזין שם משתמש'); return; }
+  state.user = { name, email: 'demo@app.com', initials: name[0].toUpperCase() };
+  document.getElementById('onboarding-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  document.getElementById('workspace-name').textContent = 'סביבת העבודה של ' + name;
+  document.querySelector('.avatar').textContent = state.user.initials;
   initApp();
 }
 
 function logout() {
   document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('onboarding-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
+}
+
+function showEditUsername() {
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div class="modal-title" style="margin-bottom:0">שנה שם משתמש</div>
+      <span style="font-size:24px;cursor:pointer;color:var(--text3)" onclick="closeModal()">×</span>
+    </div>
+    <div class="form-group">
+      <label class="form-label">שם משתמש חדש</label>
+      <input class="form-input" id="edit-username" value="${state.user?.name || ''}" maxlength="20">
+    </div>
+    <button class="submit-btn" onclick="saveUsername()">שמור</button>
+  `);
+}
+
+function saveUsername() {
+  const name = document.getElementById('edit-username').value.trim();
+  if (!name) return;
+  state.user.name = name;
+  state.user.initials = name[0].toUpperCase();
+  document.getElementById('workspace-name').textContent = 'סביבת העבודה של ' + name;
+  document.querySelector('.avatar').textContent = state.user.initials;
+  closeModal();
+  renderSettings();
+  showNotification('✅ שם משתמש עודכן', 'success');
 }
 
 // ============ INIT ============
@@ -1279,6 +1332,14 @@ function renderCatBreakdown() {
 
 // ============ SETTINGS RENDER ============
 function renderSettings() {
+  // Update profile
+  if (state.user) {
+    const el = document.getElementById('settings-username');
+    const av = document.getElementById('settings-avatar');
+    if (el) el.textContent = state.user.name;
+    if (av) av.textContent = state.user.initials;
+  }
+
   // Banks
   document.getElementById('settings-banks').innerHTML = state.banks.map(b =>
     `<div class="settings-item">
@@ -1495,8 +1556,10 @@ function showApproveModal() {
   window._approveItems = items;
 
   showModal(`
-    <div class="modal-handle"></div>
-    <div class="modal-title">אישור חיובים חודשיים</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="modal-title" style="margin-bottom:0">אישור חיובים חודשיים</div>
+      <span style="font-size:26px;cursor:pointer;color:var(--text3);line-height:1" onclick="closeModal()">×</span>
+    </div>
     <p style="color:var(--text2);font-size:14px;margin-bottom:16px;">בדוק ואשר את החיובים לחודש זה. ניתן לשנות סכום לפני אישור.</p>
     <div style="display:flex;gap:8px;margin-bottom:16px;">
       <button class="type-btn ${state.approvalMode==='all'?'active-income':''}" onclick="setApproveMode('all')">אשר הכל</button>
@@ -1506,6 +1569,7 @@ function showApproveModal() {
       ${items.map((fe,i) => renderApproveItem(fe, i)).join('')}
     </div>
     <button class="submit-btn" onclick="submitApprove()" style="margin-top:16px;">✅ אשר חיובים מסומנים</button>
+    <button onclick="closeModal()" style="width:100%;margin-top:8px;padding:12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;">ביטול – יציאה ללא אישור</button>
   `);
   document.getElementById('notif-badge').style.display = 'none';
 }
