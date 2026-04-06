@@ -744,7 +744,18 @@ async function fbLoad(uid) {
     }
 
     // Load workspace data
-    const snap = await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').get();
+    let snap = await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').get();
+
+    // MIGRATION: if no data in new path, check old path (users/{uid}/data/main)
+    if (!snap.exists) {
+      const oldSnap = await fbDb.collection('users').doc(uid).collection('data').doc('main').get();
+      if (oldSnap.exists) {
+        // Migrate old data to new workspace path
+        await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').set(oldSnap.data());
+        snap = await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').get();
+      }
+    }
+
     if (snap.exists) {
       const d = snap.data();
       if (d.banks)    S.banks   = d.banks;
