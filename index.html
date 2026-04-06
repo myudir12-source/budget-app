@@ -724,19 +724,26 @@ let S = {
 // ═══════════════════════════════════════════════
 async function fbLoad(uid) {
   try {
+    // Check if user already has a workspace (always fetch first to avoid overwriting)
+    const userMeta = await fbDb.collection('userMeta').doc(uid).get();
+    const existingWorkspaceId = userMeta.exists ? userMeta.data().workspaceId : null;
+
     // Check if there's an invite link (workspace join)
     const urlParams = new URLSearchParams(window.location.search);
     const inviteWsId = urlParams.get('ws');
-    if (inviteWsId) {
-      // Join existing workspace
+    if (inviteWsId && !existingWorkspaceId) {
+      // Only join if the user doesn't already have their own workspace
       await fbJoinWorkspace(uid, inviteWsId);
       return;
     }
 
-    // Check if user already has a workspace
-    const userMeta = await fbDb.collection('userMeta').doc(uid).get();
-    if (userMeta.exists && userMeta.data().workspaceId) {
-      S.workspaceId = userMeta.data().workspaceId;
+    // If there was an invite link but user already has a workspace, just clean the URL
+    if (inviteWsId) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (existingWorkspaceId) {
+      S.workspaceId = existingWorkspaceId;
     } else {
       // Create new workspace for this user
       S.workspaceId = uid;
@@ -798,8 +805,8 @@ async function fbLoad(uid) {
 
 async function fbJoinWorkspace(uid, wsId) {
   try {
-    // Save this user's workspace pointer
-    await fbDb.collection('userMeta').doc(uid).set({ workspaceId: wsId, joinedAt: new Date().toISOString() });
+    // Save this user's workspace pointer (merge to preserve existing fields like createdAt)
+    await fbDb.collection('userMeta').doc(uid).set({ workspaceId: wsId, joinedAt: new Date().toISOString() }, { merge: true });
     S.workspaceId = wsId;
     // Clean URL
     window.history.replaceState({}, document.title, window.location.pathname);
