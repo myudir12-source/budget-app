@@ -750,8 +750,23 @@ async function fbLoad(uid) {
     if (!snap.exists) {
       const oldSnap = await fbDb.collection('users').doc(uid).collection('data').doc('main').get();
       if (oldSnap.exists) {
-        // Migrate old data to new workspace path
-        await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').set(oldSnap.data());
+        const old = oldSnap.data();
+        // Handle both old and new field names
+        const migrated = {
+          user:       old.user,
+          banks:      old.banks      || [],
+          credits:    old.credits    || old.creditCards    || [],
+          fixed:      old.fixed      || old.fixedExpenses  || [],
+          fixedIncome:old.fixedIncome|| [],
+          txs:        old.txs        || old.transactions   || [],
+          cats:       old.cats       || old.categories     || [],
+          icats:      old.icats      || old.incomeCategories|| [],
+          members:    old.members    || [],
+          notifDays:  old.notifDays  !== undefined ? old.notifDays : 3,
+          dailyTime:  old.dailyTime  || '21:00',
+          savedAt:    new Date().toISOString(),
+        };
+        await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').set(migrated);
         snap = await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').get();
       }
     }
