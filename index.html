@@ -743,13 +743,13 @@ async function fbLoad(uid) {
     // Check if there's an invite link (workspace join)
     const urlParams = new URLSearchParams(window.location.search);
     const inviteWsId = urlParams.get('ws');
-    if (inviteWsId && !existingWorkspaceId) {
-      // Only join if the user doesn't already have their own workspace
+    if (inviteWsId && inviteWsId !== existingWorkspaceId) {
+      // Always join when an invite link points to a different workspace
       await fbJoinWorkspace(uid, inviteWsId);
       return;
     }
 
-    // If there was an invite link but user already has a workspace, just clean the URL
+    // Invite link matches existing workspace or no invite – clean URL if needed
     if (inviteWsId) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -859,12 +859,13 @@ function fbSave() {
 }
 
 // Auto-login
+let _loggingOut = false;
 fbAuth.onAuthStateChanged(user => {
+  if (_loggingOut) return;
   if (user && !S.user) {
     S.fbUser = user;
     fbLoad(user.uid);
   } else if (!user) {
-    // No logged in user – show auth screen
     showScreen('auth');
   }
 });
@@ -896,9 +897,22 @@ function obSubmit() {
   tutGo(0);
 }
 
-function doLogout() {
+async function doLogout() {
+  _loggingOut = true;
+  // Clear workspaceId in Firestore so the next login starts fresh (no auto-connect)
+  if (S.fbUser) {
+    try {
+      await fbDb.collection('userMeta').doc(S.fbUser.uid).set({ workspaceId: null }, { merge: true });
+    } catch(e) { /* ignore */ }
+  }
   fbAuth.signOut().catch(()=>{});
-  S = { ...S, user: null, fbUser: null, banks: [], credits: [], fixed: [], txs: [], members: [] };
+  // Reset all in-memory state
+  S.user = null; S.fbUser = null; S.workspaceId = null;
+  S.banks = []; S.credits = []; S.fixed = []; S.fixedIncome = [];
+  S.txs = []; S.members = [];
+  S.monthStartDay = 1; S.notifDays = 3; S.dailyTime = '21:00';
+  // Hide app, show auth
+  document.getElementById('app').style.display = 'none';
   showScreen('auth');
 }
 
@@ -923,6 +937,7 @@ function enterApp() {
   autoCreateFixedTxs();
   render();
   renderTopbarBalance();
+  renderSettings();
   checkUpcomingNotif();
 }
 
@@ -1058,6 +1073,14 @@ function monthTxs() {
 function creditSpent(ccId, month, year) {
   return S.txs.filter(t => t.type==='expense' && t.payMethod==='credit' && t.creditId===ccId &&
     new Date(t.date).getMonth()===month && new Date(t.date).getFullYear()===year
+  ).reduce((s,t) => s+t.amount, 0);
+}
+// Credit spend within the custom billing cycle (used for dashboard display)
+function creditSpentInCycle(ccId) {
+  const { start, end } = getCycleDates();
+  return S.txs.filter(t =>
+    t.type==='expense' && t.payMethod==='credit' && t.creditId===ccId &&
+    new Date(t.date) >= start && new Date(t.date) <= end
   ).reduce((s,t) => s+t.amount, 0);
 }
 
@@ -1224,9 +1247,14 @@ function renderCreditCards() {
   if (!S.credits.length) { c.innerHTML = '<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">אין כרטיסים עדיין</div></div>'; return; }
   c.innerHTML = S.credits.map(cc => {
     const bank = S.banks.find(b=>b.id===cc.bankId);
-    const spent = creditSpent(cc.id, S.month, S.year);
+    const spent = creditSpentInCycle(cc.id);
+    const { start, end } = getCycleDates();
+    const fmt = d => d.getDate() + '/' + (d.getMonth()+1);
+    const periodLbl = (S.monthStartDay||1) === 1
+      ? MONTHS[S.month].slice(0,3)
+      : fmt(start) + '–' + fmt(end);
     return `<div class="cc-item" onclick="editCreditModal(${cc.id})">
-      <div><div class="cc-name">💳 ${cc.name}</div><div class="cc-info">יורד ב-${cc.chargeDate} • ${bank?.name||'?'}</div></div>
+      <div><div class="cc-name">💳 ${cc.name}</div><div class="cc-info">יורד ב-${cc.chargeDate} • ${bank?.name||'?'} • ${periodLbl}</div></div>
       <div class="cc-amount">${fmtAmt(spent)}</div>
     </div>`;
   }).join('');
@@ -2035,12 +2063,24 @@ function saveUsername() {
 
 function showInviteModal() {
   const wsId = S.workspaceId || S.fbUser?.uid;
-  const url = window.location.origin + window.location.pathname + '?ws=' + wsId;
+  const appUrl = window.location.origin + window.location.pathname;
+  const inviteUrl = appUrl + '?ws=' + wsId;
+  const waText  = encodeURIComponent('הצטרף לסביבת התקציב המשפחתי שלי: ' + inviteUrl);
+  const mailSub = encodeURIComponent('הזמנה לסביבת עבודה – תקציב משפחתי');
+  const mailBody= encodeURIComponent('היי,\nהצטרף לסביבת התקציב המשפחתי שלי:\n' + inviteUrl);
   openModal(`
     <div class="modal-hdr"><div class="modal-title">הזמן לסביבת עבודה</div><div class="modal-close" onclick="closeModal()">×</div></div>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">שתף את הקישור עם בן/בת הזוג. מי שייכנס דרכו יצורף לסביבת העבודה שלך:</p>
-    <div style="background:var(--bg3);border-radius:var(--rs);padding:13px;font-size:11px;color:var(--accent);word-break:break-all;cursor:pointer" onclick="copyInvite('${url}')">${url}</div>
-    <button class="btn-primary" style="margin-top:12px" onclick="copyInvite('${url}')">📋 העתק קישור</button>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:10px">שתף את הקישור עם בן/בת הזוג – מי שייכנס דרכו יצורף לסביבת העבודה שלך:</p>
+    <div style="background:var(--bg3);border-radius:var(--rs);padding:11px;font-size:11px;color:var(--accent);word-break:break-all;cursor:pointer;margin-bottom:12px" onclick="copyInvite('${inviteUrl}')">${inviteUrl}</div>
+    <button class="btn-primary" onclick="copyInvite('${inviteUrl}')">📋 העתק קישור הזמנה</button>
+    <a href="https://wa.me/?text=${waText}" target="_blank" rel="noopener"
+       style="display:block;text-align:center;padding:13px;background:#25D366;color:white;border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:15px;font-weight:600;text-decoration:none;margin-top:8px">💬 שלח בוואטסאפ</a>
+    <a href="mailto:?subject=${mailSub}&body=${mailBody}"
+       style="display:block;text-align:center;padding:13px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:15px;font-weight:600;text-decoration:none;margin-top:8px">✉️ שלח במייל</a>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">שיתוף קישור האפליקציה בלבד (ללא הצטרפות לסביבה):</div>
+      <button class="btn-secondary" style="margin-top:0" onclick="copyInvite('${appUrl}')">📱 העתק קישור אפליקציה</button>
+    </div>
     <button class="btn-secondary" onclick="closeModal()">סגור</button>
   `);
 }
