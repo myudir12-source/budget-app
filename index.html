@@ -483,6 +483,10 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
         <div class="balance-item"><div class="balance-item-lbl">הכנסות</div><div class="balance-item-val c-green" id="dash-income">₪ 0</div></div>
         <div class="balance-item"><div class="balance-item-lbl">הוצאות</div><div class="balance-item-val c-red" id="dash-expense">₪ 0</div></div>
       </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--text2)">נשאר החודש</div>
+        <div style="font-size:18px;font-weight:700" id="dash-remaining">₪ 0</div>
+      </div>
     </div>
     <div class="section-hdr"><div class="section-title">חשבונות בנק</div><div class="section-action" onclick="showAddBankModal()">+ הוסף</div></div>
     <div class="bank-scroll" id="bank-cards"></div>
@@ -575,7 +579,13 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
     <div class="settings-section">
       <div class="settings-title">הוצאות קבועות</div>
       <div id="s-fixed"></div>
-      <button class="btn-add" onclick="showAddFixedModal()">+ הוסף הוצאה קבועה</button>
+      <button class="btn-add" onclick="showAddFixedModal(false)">+ הוסף הוצאה קבועה</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">הכנסות קבועות</div>
+      <div id="s-fixed-income"></div>
+      <button class="btn-add" onclick="showAddFixedModal(true)">+ הוסף הכנסה קבועה</button>
     </div>
 
     <div class="settings-section">
@@ -703,6 +713,7 @@ let S = {
   ],
   members: [],
   workspaceId: null,
+  fixedIncome: [],
   notifDays: 3,
   dailyTime: '21:00',
   approvalMode: 'all',
@@ -742,6 +753,7 @@ async function fbLoad(uid) {
       if (d.txs)      S.txs     = d.txs;
       if (d.cats)     S.cats    = d.cats;
       if (d.icats)    S.icats   = d.icats;
+      if (d.fixedIncome) S.fixedIncome = d.fixedIncome;
       if (d.members)  S.members = d.members;
       if (d.notifDays !== undefined) S.notifDays = d.notifDays;
       if (d.dailyTime) S.dailyTime = d.dailyTime;
@@ -783,6 +795,7 @@ function fbSave() {
   if (!S.fbUser || !S.workspaceId) return;
   fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').set({
     user: S.user, banks: S.banks, credits: S.credits, fixed: S.fixed,
+    fixedIncome: S.fixedIncome,
     txs: S.txs, cats: S.cats, icats: S.icats, members: S.members,
     notifDays: S.notifDays, dailyTime: S.dailyTime,
     savedAt: new Date().toISOString(),
@@ -851,8 +864,61 @@ function enterApp() {
   av.textContent = S.user.initials;
   if (S.user.color) av.style.background = S.user.color;
   updateMonthLabels();
+  autoCreateFixedTxs();
   render();
   checkUpcomingNotif();
+}
+
+function autoCreateFixedTxs() {
+  const today = new Date();
+  const todayDay = today.getDate();
+  const month = today.getMonth();
+  const year = today.getFullYear();
+
+  // Auto-create expense fixed that have passed this month
+  S.fixed.forEach(fe => {
+    if (fe.day <= todayDay) {
+      const alreadyExists = S.txs.find(t =>
+        t.fixedId === fe.id &&
+        new Date(t.date).getMonth() === month &&
+        new Date(t.date).getFullYear() === year
+      );
+      if (!alreadyExists) {
+        const d = new Date(year, month, fe.day);
+        S.txs.push({
+          id: Date.now() + fe.id,
+          type: 'expense', name: fe.name, amount: fe.amount,
+          date: d.toISOString().split('T')[0],
+          catId: fe.catId, payMethod: fe.payMethod,
+          bankId: fe.bankId, creditId: fe.creditId,
+          note: 'חיוב קבוע – שינוי חל על החודש הזה בלבד',
+          fixedId: fe.id, autoCreated: true,
+        });
+      }
+    }
+  });
+
+  // Auto-create income fixed that have passed this month
+  S.fixedIncome.forEach(fi => {
+    if (fi.day <= todayDay) {
+      const alreadyExists = S.txs.find(t =>
+        t.fixedId === fi.id &&
+        new Date(t.date).getMonth() === month &&
+        new Date(t.date).getFullYear() === year
+      );
+      if (!alreadyExists) {
+        const d = new Date(year, month, fi.day);
+        S.txs.push({
+          id: Date.now() + fi.id + 1,
+          type: 'income', name: fi.name, amount: fi.amount,
+          date: d.toISOString().split('T')[0],
+          catId: fi.catId, bankId: fi.bankId,
+          note: 'הכנסה קבועה – שינוי חל על החודש הזה בלבד',
+          fixedId: fi.id, autoCreated: true,
+        });
+      }
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════
@@ -984,8 +1050,13 @@ function renderBalance() {
   }
   const ie = document.getElementById('dash-income');
   const ee = document.getElementById('dash-expense');
+  const re = document.getElementById('dash-remaining');
   if (ie) ie.textContent = fmtAmt(income);
   if (ee) ee.textContent = fmtAmt(expense);
+  if (re) {
+    re.textContent = (bal>=0?'+ ':'- ') + fmtAmt(Math.abs(bal));
+    re.style.color = bal>=0 ? 'var(--green)' : 'var(--red)';
+  }
 }
 
 function renderBankCards() {
@@ -1087,9 +1158,19 @@ function renderSettings() {
     return `<div class="settings-item">
       <div class="settings-item-left"><div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
       <div><div class="settings-name">${fe.name}</div><div class="settings-sub">${fmtAmt(fe.amount)} • יום ${fe.day}</div></div></div>
-      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editFixedModal(${fe.id})">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delFixed(${fe.id})">מחק</span></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editFixedModal(${fe.id},false)">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delFixed(${fe.id},false)">מחק</span></div>
     </div>`;
   }).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין הוצאות קבועות</div>';
+
+  const sfi = document.getElementById('s-fixed-income');
+  if (sfi) sfi.innerHTML = S.fixedIncome.map(fi => {
+    const cat = catById(fi.catId, true);
+    return `<div class="settings-item">
+      <div class="settings-item-left"><div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div><div class="settings-name">${fi.name}</div><div class="settings-sub">${fmtAmt(fi.amount)} • יום ${fi.day}</div></div></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editFixedModal(${fi.id},true)">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delFixed(${fi.id},true)">מחק</span></div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין הכנסות קבועות</div>';
 
   const sca = document.getElementById('s-cats');
   if (sca) sca.innerHTML = S.cats.map(cat => `<div class="settings-item">
@@ -1327,6 +1408,11 @@ function showAddTxModal() {
     <div class="fg" id="tx-to-g" style="display:none"><label class="fl">לחשבון</label>
       <select class="fs" id="tx-to">${S.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
     <div class="fg"><label class="fl">הערה (אופציונלי)</label><input class="fi" id="tx-note" placeholder="הערה..."></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg3);border-radius:var(--rs);margin-bottom:8px">
+      <input type="checkbox" id="tx-recurring" style="width:18px;height:18px;cursor:pointer">
+      <label for="tx-recurring" style="font-size:13px;cursor:pointer" id="tx-recurring-lbl">הפוך להוצאה קבועה חוזרת</label>
+    </div>
+    <div class="fg" id="tx-rec-day-g" style="display:none"><label class="fl">יום בחודש</label><input class="fi" id="tx-rec-day" type="number" min="1" max="31" placeholder="1" inputmode="numeric"></div>
     <button class="btn-primary" onclick="submitTx()">הוסף פעולה</button>
     <button class="btn-secondary" onclick="closeModal()">ביטול</button>
   `);
@@ -1345,6 +1431,15 @@ function setTxType(t) {
   show('tx-bank-g',   t==='income');
   show('tx-from-g',   t==='transfer');
   show('tx-to-g',     t==='transfer');
+  // Update recurring label
+  const lbl = document.getElementById('tx-recurring-lbl');
+  if (lbl) lbl.textContent = t==='income' ? 'הפוך להכנסה קבועה חוזרת' : 'הפוך להוצאה קבועה חוזרת';
+  // Hide recurring for transfers
+  const recRow = document.getElementById('tx-recurring')?.parentElement;
+  if (recRow) recRow.style.display = t==='transfer' ? 'none' : '';
+  // Wire checkbox
+  const cb = document.getElementById('tx-recurring');
+  if (cb) cb.onchange = () => { show('tx-rec-day-g', cb.checked); };
 }
 
 function submitTx() {
@@ -1370,8 +1465,25 @@ function submitTx() {
     const to  =S.banks.find(b=>b.id===tx.toBankId);   if(to)   to.balance+=amt;
   }
   S.txs.push(tx);
+
+  // Handle recurring
+  const isRecurring = document.getElementById('tx-recurring')?.checked;
+  if (isRecurring && txType !== 'transfer') {
+    const day = parseInt(document.getElementById('tx-rec-day')?.value) || new Date(date).getDate();
+    const fe = { id: Date.now()+1, name, amount: amt, day, catId: tx.catId, isIncome: txType==='income' };
+    if (txType === 'income') {
+      fe.bankId = tx.bankId;
+      S.fixedIncome.push(fe);
+    } else {
+      fe.payMethod = tx.payMethod; fe.creditId = tx.creditId; fe.bankId = tx.bankId;
+      S.fixed.push(fe);
+    }
+    toast('✅ פעולה נוספה + נשמרה כקבועה','success');
+  } else {
+    toast('✅ הפעולה נוספה','success');
+  }
+
   closeModal(); render(); fbSave();
-  toast('✅ הפעולה נוספה','success');
 }
 
 // ═══════════════════════════════════════════════
@@ -1576,69 +1688,101 @@ function saveEditCredit(id) {
 function delCredit(id) { if(!confirm('למחוק?')) return; S.credits=S.credits.filter(c=>c.id!==id); closeModal(); renderCreditCards(); renderSettings(); fbSave(); }
 
 // ═══════════════════════════════════════════════
-// FIXED EXPENSE MODALS
+// FIXED INCOME/EXPENSE MODALS
 // ═══════════════════════════════════════════════
-function showAddFixedModal() {
+function showAddFixedModal(isIncome) {
+  const cats = isIncome ? S.icats : S.cats;
   openModal(`
-    <div class="modal-hdr"><div class="modal-title">הוספת הוצאה קבועה</div><div class="modal-close" onclick="closeModal()">×</div></div>
-    <div class="fg"><label class="fl">שם</label><input class="fi" id="nf-name" placeholder="משכנתא, שכירות..."></div>
+    <div class="modal-hdr"><div class="modal-title">הוספת ${isIncome?'הכנסה':'הוצאה'} קבועה</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div class="fg"><label class="fl">שם</label><input class="fi" id="nf-name" placeholder="${isIncome?'משכורת, שכירות...':'משכנתא, שכירות...'}"></div>
     <div class="fg"><label class="fl">סכום (₪)</label><input class="fi" id="nf-amt" type="number" placeholder="0" inputmode="decimal"></div>
     <div class="fg"><label class="fl">יום בחודש</label><input class="fi" id="nf-day" type="number" min="1" max="31" placeholder="1" inputmode="numeric"></div>
     <div class="fg"><label class="fl">קטגוריה</label>
-      <select class="fs" id="nf-cat">${S.cats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select></div>
+      <select class="fs" id="nf-cat">${cats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select></div>
+    ${isIncome ? `
+    <div class="fg"><label class="fl">לחשבון בנק</label>
+      <select class="fs" id="nf-bank">${S.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
+    ` : `
     <div class="fg"><label class="fl">אמצעי תשלום</label>
       <select class="fs" id="nf-pay">
         ${S.credits.map(cc=>`<option value="credit_${cc.id}">💳 ${cc.name}</option>`).join('')}
         ${S.banks.map(b=>`<option value="bank_${b.id}">🏦 ${b.name}</option>`).join('')}
       </select></div>
-    <div class="fg"><label class="fl">התראה (ימים לפני)</label><input class="fi" id="nf-notif" type="number" value="3" min="0" max="14" inputmode="numeric"></div>
-    <button class="btn-primary" onclick="submitAddFixed()">הוסף</button>
+    `}
+    <button class="btn-primary" onclick="submitAddFixed(${isIncome})">הוסף</button>
     <button class="btn-secondary" onclick="closeModal()">ביטול</button>
   `);
 }
-function submitAddFixed() {
+
+function submitAddFixed(isIncome) {
   const name=document.getElementById('nf-name').value.trim();
   const amt=parseFloat(document.getElementById('nf-amt').value);
   const day=parseInt(document.getElementById('nf-day').value);
   const catId=parseInt(document.getElementById('nf-cat').value);
-  const pay=document.getElementById('nf-pay').value;
   if(!name||!amt||!day){toast('⚠️ נא למלא הכל','warn');return;}
-  const fe={id:Date.now(),name,amount:amt,day,catId};
-  if(pay.startsWith('credit_')){fe.payMethod='credit';fe.creditId=parseInt(pay.split('_')[1]);}
-  else{fe.payMethod='bank';fe.bankId=parseInt(pay.split('_')[1]);}
-  S.fixed.push(fe); closeModal(); renderUpcoming(); renderSettings(); fbSave(); toast('✅ נוסף','success');
+  const fe={id:Date.now(),name,amount:amt,day,catId,isIncome:!!isIncome};
+  if (isIncome) {
+    fe.bankId = parseInt(document.getElementById('nf-bank').value);
+    S.fixedIncome.push(fe);
+  } else {
+    const pay=document.getElementById('nf-pay').value;
+    if(pay.startsWith('credit_')){fe.payMethod='credit';fe.creditId=parseInt(pay.split('_')[1]);}
+    else{fe.payMethod='bank';fe.bankId=parseInt(pay.split('_')[1]);}
+    S.fixed.push(fe);
+  }
+  closeModal(); renderUpcoming(); renderSettings(); fbSave(); toast('✅ נוסף','success');
 }
-function editFixedModal(id) {
-  const fe=S.fixed.find(x=>x.id===id); if(!fe) return;
+
+function editFixedModal(id, isIncome) {
+  const arr = isIncome ? S.fixedIncome : S.fixed;
+  const fe=arr.find(x=>x.id===id); if(!fe) return;
+  const cats = isIncome ? S.icats : S.cats;
   openModal(`
     <div class="modal-hdr"><div class="modal-title">עריכת ${fe.name}</div><div class="modal-close" onclick="closeModal()">×</div></div>
     <div class="fg"><label class="fl">שם</label><input class="fi" id="ef-name" value="${fe.name}"></div>
     <div class="fg"><label class="fl">סכום (₪)</label><input class="fi" id="ef-amt" type="number" value="${fe.amount}" inputmode="decimal"></div>
     <div class="fg"><label class="fl">יום בחודש</label><input class="fi" id="ef-day" type="number" value="${fe.day}" inputmode="numeric"></div>
     <div class="fg"><label class="fl">קטגוריה</label>
-      <select class="fs" id="ef-cat">${S.cats.map(c=>`<option value="${c.id}" ${c.id===fe.catId?'selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
+      <select class="fs" id="ef-cat">${cats.map(c=>`<option value="${c.id}" ${c.id===fe.catId?'selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
+    ${isIncome ? `
+    <div class="fg"><label class="fl">לחשבון בנק</label>
+      <select class="fs" id="ef-bank">${S.banks.map(b=>`<option value="${b.id}" ${b.id===fe.bankId?'selected':''}>${b.name}</option>`).join('')}</select></div>
+    ` : `
     <div class="fg"><label class="fl">אמצעי תשלום</label>
       <select class="fs" id="ef-pay">
         ${S.credits.map(cc=>`<option value="credit_${cc.id}" ${fe.payMethod==='credit'&&fe.creditId===cc.id?'selected':''}>💳 ${cc.name}</option>`).join('')}
         ${S.banks.map(b=>`<option value="bank_${b.id}" ${fe.payMethod==='bank'&&fe.bankId===b.id?'selected':''}>🏦 ${b.name}</option>`).join('')}
       </select></div>
-    <button class="btn-primary" onclick="saveEditFixed(${id})">שמור</button>
-    <button class="btn-danger" onclick="delFixed(${id})">מחק</button>
+    `}
+    <button class="btn-primary" onclick="saveEditFixed(${id},${isIncome})">שמור</button>
+    <button class="btn-danger" onclick="delFixed(${id},${isIncome})">מחק</button>
     <button class="btn-secondary" onclick="closeModal()">ביטול</button>
   `);
 }
-function saveEditFixed(id) {
-  const fe=S.fixed.find(x=>x.id===id); if(!fe) return;
+
+function saveEditFixed(id, isIncome) {
+  const arr = isIncome ? S.fixedIncome : S.fixed;
+  const fe=arr.find(x=>x.id===id); if(!fe) return;
   fe.name=document.getElementById('ef-name').value;
   fe.amount=parseFloat(document.getElementById('ef-amt').value);
   fe.day=parseInt(document.getElementById('ef-day').value);
   fe.catId=parseInt(document.getElementById('ef-cat').value);
-  const pay=document.getElementById('ef-pay').value;
-  if(pay.startsWith('credit_')){fe.payMethod='credit';fe.creditId=parseInt(pay.split('_')[1]);delete fe.bankId;}
-  else{fe.payMethod='bank';fe.bankId=parseInt(pay.split('_')[1]);delete fe.creditId;}
+  if (isIncome) {
+    fe.bankId=parseInt(document.getElementById('ef-bank').value);
+  } else {
+    const pay=document.getElementById('ef-pay').value;
+    if(pay.startsWith('credit_')){fe.payMethod='credit';fe.creditId=parseInt(pay.split('_')[1]);delete fe.bankId;}
+    else{fe.payMethod='bank';fe.bankId=parseInt(pay.split('_')[1]);delete fe.creditId;}
+  }
   closeModal(); renderUpcoming(); renderSettings(); fbSave(); toast('✅ עודכן','success');
 }
-function delFixed(id) { if(!confirm('למחוק?')) return; S.fixed=S.fixed.filter(f=>f.id!==id); closeModal(); renderUpcoming(); renderSettings(); fbSave(); }
+
+function delFixed(id, isIncome) {
+  if(!confirm('למחוק?')) return;
+  if (isIncome) S.fixedIncome=S.fixedIncome.filter(f=>f.id!==id);
+  else S.fixed=S.fixed.filter(f=>f.id!==id);
+  closeModal(); renderUpcoming(); renderSettings(); fbSave();
+}
 
 // ═══════════════════════════════════════════════
 // APPROVE MONTHLY FIXED
