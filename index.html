@@ -460,6 +460,7 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <div class="topbar-sub" id="ws-name">טוען...</div>
     </div>
     <div class="topbar-right">
+      <div id="topbar-balance" style="font-size:14px;font-weight:700;letter-spacing:-0.3px;cursor:pointer" onclick="navTo('settings')" title="סך כל חשבונות הבנק"></div>
       <div class="notif-btn" onclick="showApproveModal()">
         <svg width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <div class="notif-badge" id="notif-badge" style="display:none">!</div>
@@ -601,6 +602,16 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
     </div>
 
     <div class="settings-section">
+      <div class="settings-title">מחזור חיוב</div>
+      <div class="settings-item" onclick="showCycleSettings()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(78,205,196,0.15)">📅</div>
+          <div><div class="settings-name">יום התחלת חודש</div><div class="settings-sub" id="s-cycle-day">1 (חודש קלנדרי)</div></div>
+        </div><div class="settings-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-title">התראות</div>
       <div class="settings-item" onclick="showNotifSettings()">
         <div class="settings-item-left">
@@ -717,6 +728,7 @@ let S = {
   notifDays: 3,
   dailyTime: '21:00',
   approvalMode: 'all',
+  monthStartDay: 1,
 };
 
 // ═══════════════════════════════════════════════
@@ -790,6 +802,7 @@ async function fbLoad(uid) {
       if (d.members)  S.members = d.members;
       if (d.notifDays !== undefined) S.notifDays = d.notifDays;
       if (d.dailyTime) S.dailyTime = d.dailyTime;
+      if (d.monthStartDay !== undefined) S.monthStartDay = d.monthStartDay;
       if (d.user) {
         S.user = d.user;
         enterApp();
@@ -810,14 +823,24 @@ async function fbJoinWorkspace(uid, wsId) {
     S.workspaceId = wsId;
     // Clean URL
     window.history.replaceState({}, document.title, window.location.pathname);
-    // Load workspace data
+    // Load shared workspace data into S so new member is added to the existing list
     const snap = await fbDb.collection('workspaces').doc(wsId).collection('data').doc('main').get();
-    if (snap.exists && snap.data().user) {
-      // Workspace exists – show onboarding to pick username, then join
-      showScreen('onboarding');
-    } else {
-      showScreen('onboarding');
+    if (snap.exists) {
+      const d = snap.data();
+      if (d.banks)       S.banks       = d.banks;
+      if (d.credits)     S.credits     = d.credits;
+      if (d.fixed)       S.fixed       = d.fixed;
+      if (d.txs)         S.txs         = d.txs;
+      if (d.cats)        S.cats        = d.cats;
+      if (d.icats)       S.icats       = d.icats;
+      if (d.fixedIncome) S.fixedIncome = d.fixedIncome;
+      if (d.members)     S.members     = d.members;
+      if (d.notifDays !== undefined) S.notifDays = d.notifDays;
+      if (d.dailyTime)   S.dailyTime   = d.dailyTime;
+      if (d.monthStartDay !== undefined) S.monthStartDay = d.monthStartDay;
     }
+    // Show onboarding so new user can pick their name; obSubmit will add them to members
+    showScreen('onboarding');
   } catch(e) {
     console.error(e);
     showScreen('onboarding');
@@ -830,7 +853,7 @@ function fbSave() {
     user: S.user, banks: S.banks, credits: S.credits, fixed: S.fixed,
     fixedIncome: S.fixedIncome,
     txs: S.txs, cats: S.cats, icats: S.icats, members: S.members,
-    notifDays: S.notifDays, dailyTime: S.dailyTime,
+    notifDays: S.notifDays, dailyTime: S.dailyTime, monthStartDay: S.monthStartDay,
     savedAt: new Date().toISOString(),
   }).catch(e => console.error('save error', e));
 }
@@ -899,6 +922,7 @@ function enterApp() {
   updateMonthLabels();
   autoCreateFixedTxs();
   render();
+  renderTopbarBalance();
   checkUpcomingNotif();
 }
 
@@ -1060,6 +1084,65 @@ function bankStatus(bank) {
 function catById(id, income) { return (income ? S.icats : S.cats).find(c => c.id === id) || {icon:'📦',name:'אחר',color:'#607d8b'}; }
 function fmtAmt(n) { return '₪' + (n||0).toLocaleString(); }
 
+// Returns {start, end} Date objects for the current billing cycle
+function getCycleDates() {
+  const day = S.monthStartDay || 1;
+  const start = new Date(S.year, S.month, day);
+  const end = day > 1
+    ? new Date(S.year, S.month + 1, day - 1)
+    : new Date(S.year, S.month + 1, 0); // last day of month when day=1
+  return { start, end };
+}
+
+// Fixed expenses that fall within the current billing cycle and have no recorded tx yet
+function getUnpaidFixedInCycle() {
+  const { start, end } = getCycleDates();
+  const today = new Date(); today.setHours(23, 59, 59, 999);
+  const day = S.monthStartDay || 1;
+  return S.fixed.filter(fe => {
+    // Which calendar date does this fixed expense land on inside this cycle?
+    const fDate = fe.day >= day
+      ? new Date(S.year, S.month, fe.day)         // in the "from" month
+      : new Date(S.year, S.month + 1, fe.day);    // in the "to" month
+    if (fDate < start || fDate > end) return false;
+    if (fDate <= today) return false; // past dates are already auto-created as txs
+    // Future dates: only include if not already recorded in this cycle
+    return !S.txs.some(t => {
+      if (t.fixedId !== fe.id) return false;
+      const d = new Date(t.date);
+      return d >= start && d <= end;
+    });
+  });
+}
+
+// Topbar: sum of all bank balances, colour-coded by 5-day surplus
+function renderTopbarBalance() {
+  const el = document.getElementById('topbar-balance');
+  if (!el) return;
+  if (!S.banks.length) { el.textContent = ''; return; }
+  const total = S.banks.reduce((s, b) => s + b.balance, 0);
+  const today = new Date();
+  const todayDay = today.getDate();
+  const in5 = todayDay + 5;
+  let upcoming = 0;
+  S.fixed.forEach(fe => {
+    if (fe.payMethod === 'bank' && fe.day >= todayDay && fe.day <= in5)
+      upcoming += fe.amount;
+  });
+  S.credits.forEach(cc => {
+    if (cc.chargeDate >= todayDay && cc.chargeDate <= in5)
+      upcoming += creditSpent(cc.id, today.getMonth(), today.getFullYear());
+  });
+  const surplus = total - upcoming;
+  let color;
+  if (surplus >= 2500)      color = 'var(--green)';
+  else if (surplus >= 500)  color = 'var(--yellow)';
+  else if (surplus >= 0)    color = 'var(--orange)';
+  else                      color = 'var(--red)';
+  el.textContent = fmtAmt(total);
+  el.style.color = color;
+}
+
 // ═══════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════
@@ -1069,6 +1152,14 @@ function render() {
   renderCreditCards();
   renderUpcoming();
   renderRecentTxs();
+  renderTopbarBalance();
+}
+
+function surplusColor(n) {
+  if (n >= 2500)     return 'var(--green)';
+  if (n >= 500)      return 'var(--yellow)';
+  if (n >= 0)        return 'var(--orange)';
+  return 'var(--red)';
 }
 
 function renderBalance() {
@@ -1083,12 +1174,33 @@ function renderBalance() {
   }
   const ie = document.getElementById('dash-income');
   const ee = document.getElementById('dash-expense');
-  const re = document.getElementById('dash-remaining');
   if (ie) ie.textContent = fmtAmt(income);
   if (ee) ee.textContent = fmtAmt(expense);
+
+  // "נשאר החודש" uses billing cycle: cycle txs + unpaid upcoming fixed - cycle income
+  const { start, end } = getCycleDates();
+  const cycleTxsList = S.txs.filter(t => { const d = new Date(t.date); return d >= start && d <= end; });
+  const cycleIncome  = cycleTxsList.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount, 0);
+  const cycleExpense = cycleTxsList.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount, 0);
+  const unpaidFixed  = getUnpaidFixedInCycle().reduce((s,fe)=>s+fe.amount, 0);
+  const remaining    = cycleIncome - cycleExpense - unpaidFixed;
+
+  const re = document.getElementById('dash-remaining');
   if (re) {
-    re.textContent = (bal>=0?'+ ':'- ') + fmtAmt(Math.abs(bal));
-    re.style.color = bal>=0 ? 'var(--green)' : 'var(--red)';
+    re.textContent = (remaining>=0?'+ ':'- ') + fmtAmt(Math.abs(remaining));
+    re.style.color = surplusColor(remaining);
+  }
+
+  // Update subtitle to show cycle range when not a standard calendar month
+  const lbl = document.getElementById('dash-month-lbl');
+  if (lbl) {
+    const day = S.monthStartDay || 1;
+    if (day === 1) {
+      lbl.textContent = MONTHS[S.month] + ' ' + S.year;
+    } else {
+      const fmt = d => d.getDate() + '/' + (d.getMonth()+1);
+      lbl.textContent = fmt(start) + ' – ' + fmt(end);
+    }
   }
 }
 
@@ -1221,6 +1333,8 @@ function renderSettings() {
 
   const snd = document.getElementById('s-notif-days'); if (snd) snd.textContent = S.notifDays + ' ימים לפני חיוב';
   const sdt = document.getElementById('s-daily-time'); if (sdt) sdt.textContent = S.dailyTime;
+  const scd = document.getElementById('s-cycle-day');
+  if (scd) scd.textContent = (S.monthStartDay || 1) === 1 ? '1 (חודש קלנדרי)' : `${S.monthStartDay} לחודש`;
 }
 
 // ═══════════════════════════════════════════════
@@ -1952,6 +2066,22 @@ function showDailyNotif() {
   `);
 }
 function saveDailyTime() { S.dailyTime=document.getElementById('nd-time').value; closeModal(); renderSettings(); fbSave(); toast('✅ תזכורת הוגדרה ל-'+S.dailyTime,'success'); }
+
+function showCycleSettings() {
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">יום התחלת מחזור חיוב</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">הגדר את יום תחילת החודש הפיננסי שלך.<br>לדוגמה: יום 10 = מחזור מה-10 בחודש עד ה-9 בחודש הבא.</p>
+    <div class="fg"><label class="fl">יום בחודש (1–31)</label><input class="fi" id="cycle-day" type="number" min="1" max="31" value="${S.monthStartDay || 1}" inputmode="numeric"></div>
+    <button class="btn-primary" onclick="saveCycleDay()">שמור</button>
+    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+  `);
+}
+function saveCycleDay() {
+  const day = Math.min(31, Math.max(1, parseInt(document.getElementById('cycle-day').value) || 1));
+  S.monthStartDay = day;
+  closeModal(); renderSettings(); render(); fbSave();
+  toast('✅ מחזור חיוב עודכן – מיום ' + day + ' לחודש', 'success');
+}
 
 // ═══════════════════════════════════════════════
 // HELP
