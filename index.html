@@ -288,8 +288,14 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
 </head>
 <body>
 
+<!-- ══ LOADING SCREEN ══ -->
+<div id="loading" class="screen active" style="align-items:center;justify-content:center;background:var(--bg)">
+  <div style="font-size:48px;margin-bottom:16px">💰</div>
+  <div style="color:var(--text2);font-size:14px">טוען...</div>
+</div>
+
 <!-- ══ AUTH SCREEN ══ -->
-<div id="auth" class="screen active">
+<div id="auth" class="screen">
   <div class="auth-logo">💰</div>
   <div class="auth-title">תקציב משפחתי</div>
   <div class="auth-sub">נהל את הכסף שלך בחכמה</div>
@@ -696,6 +702,7 @@ let S = {
     {id:4,name:'אחר',color:'#607d8b',icon:'➕'},
   ],
   members: [],
+  workspaceId: null,
   notifDays: 3,
   dailyTime: '21:00',
   approvalMode: 'all',
@@ -706,7 +713,27 @@ let S = {
 // ═══════════════════════════════════════════════
 async function fbLoad(uid) {
   try {
-    const snap = await fbDb.collection('users').doc(uid).collection('data').doc('main').get();
+    // Check if there's an invite link (workspace join)
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteWsId = urlParams.get('ws');
+    if (inviteWsId) {
+      // Join existing workspace
+      await fbJoinWorkspace(uid, inviteWsId);
+      return;
+    }
+
+    // Check if user already has a workspace
+    const userMeta = await fbDb.collection('userMeta').doc(uid).get();
+    if (userMeta.exists && userMeta.data().workspaceId) {
+      S.workspaceId = userMeta.data().workspaceId;
+    } else {
+      // Create new workspace for this user
+      S.workspaceId = uid;
+      await fbDb.collection('userMeta').doc(uid).set({ workspaceId: uid, createdAt: new Date().toISOString() });
+    }
+
+    // Load workspace data
+    const snap = await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').get();
     if (snap.exists) {
       const d = snap.data();
       if (d.banks)    S.banks   = d.banks;
@@ -731,9 +758,30 @@ async function fbLoad(uid) {
   }
 }
 
+async function fbJoinWorkspace(uid, wsId) {
+  try {
+    // Save this user's workspace pointer
+    await fbDb.collection('userMeta').doc(uid).set({ workspaceId: wsId, joinedAt: new Date().toISOString() });
+    S.workspaceId = wsId;
+    // Clean URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+    // Load workspace data
+    const snap = await fbDb.collection('workspaces').doc(wsId).collection('data').doc('main').get();
+    if (snap.exists && snap.data().user) {
+      // Workspace exists – show onboarding to pick username, then join
+      showScreen('onboarding');
+    } else {
+      showScreen('onboarding');
+    }
+  } catch(e) {
+    console.error(e);
+    showScreen('onboarding');
+  }
+}
+
 function fbSave() {
-  if (!S.fbUser) return;
-  fbDb.collection('users').doc(S.fbUser.uid).collection('data').doc('main').set({
+  if (!S.fbUser || !S.workspaceId) return;
+  fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').set({
     user: S.user, banks: S.banks, credits: S.credits, fixed: S.fixed,
     txs: S.txs, cats: S.cats, icats: S.icats, members: S.members,
     notifDays: S.notifDays, dailyTime: S.dailyTime,
@@ -746,6 +794,9 @@ fbAuth.onAuthStateChanged(user => {
   if (user && !S.user) {
     S.fbUser = user;
     fbLoad(user.uid);
+  } else if (!user) {
+    // No logged in user – show auth screen
+    showScreen('auth');
   }
 });
 
@@ -769,6 +820,7 @@ function obSubmit() {
   const colors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
   const color = colors[S.members.length % colors.length];
   S.user = { name, email: S.fbUser?.email || 'demo', initials: name[0].toUpperCase(), color };
+  if (!S.workspaceId) S.workspaceId = S.fbUser?.uid || ('ws_' + Date.now());
   if (!S.members.find(m => m.name === name))
     S.members.push({ name, initials: name[0].toUpperCase(), color, role: S.members.length === 0 ? 'מנהל' : 'חבר' });
   showScreen('tutorial');
@@ -1329,14 +1381,56 @@ function editTxModal(id) {
   const tx = S.txs.find(t=>t.id===id);
   if (!tx) return;
   const isInc = tx.type==='income';
+  const isTransfer = tx.type==='transfer';
   const cats = isInc ? S.icats : S.cats;
+
+  // Build payment method current value
+  let currentPay = 'cash';
+  if (tx.payMethod==='credit') currentPay = 'credit_'+tx.creditId;
+  else if (tx.payMethod==='bank') currentPay = 'bank_'+tx.bankId;
+
   openModal(`
     <div class="modal-hdr"><div class="modal-title">עריכת פעולה</div><div class="modal-close" onclick="closeModal()">×</div></div>
+
+    <div class="fg"><label class="fl">סוג פעולה</label>
+      <select class="fs" id="etx-type" onchange="etxTypeChange()">
+        <option value="expense" ${tx.type==='expense'?'selected':''}>הוצאה</option>
+        <option value="income"  ${tx.type==='income'?'selected':''}>הכנסה</option>
+        <option value="transfer" ${tx.type==='transfer'?'selected':''}>העברה</option>
+      </select></div>
+
     <div class="fg"><label class="fl">תיאור</label><input class="fi" id="etx-name" value="${tx.name}"></div>
     <div class="fg"><label class="fl">סכום (₪)</label><input class="fi" id="etx-amt" type="number" value="${tx.amount}" inputmode="decimal"></div>
     <div class="fg"><label class="fl">תאריך</label><input class="fi" id="etx-date" type="date" value="${tx.date}"></div>
-    <div class="fg"><label class="fl">קטגוריה</label>
-      <select class="fs" id="etx-cat">${cats.map(c=>`<option value="${c.id}" ${c.id===tx.catId?'selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
+
+    <div class="fg" id="etx-cat-g" style="${isInc||isTransfer?'display:none':''}">
+      <label class="fl">קטגוריה הוצאה</label>
+      <select class="fs" id="etx-cat">${S.cats.map(c=>`<option value="${c.id}" ${!isInc&&c.id===tx.catId?'selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
+
+    <div class="fg" id="etx-icat-g" style="${!isInc||isTransfer?'display:none':''}">
+      <label class="fl">קטגוריה הכנסה</label>
+      <select class="fs" id="etx-icat">${S.icats.map(c=>`<option value="${c.id}" ${isInc&&c.id===tx.catId?'selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
+
+    <div class="fg" id="etx-pay-g" style="${!isInc&&!isTransfer?'':'display:none'}">
+      <label class="fl">אמצעי תשלום</label>
+      <select class="fs" id="etx-pay">
+        <option value="cash" ${currentPay==='cash'?'selected':''}>מזומן</option>
+        ${S.credits.map(cc=>`<option value="credit_${cc.id}" ${currentPay==='credit_'+cc.id?'selected':''}>💳 ${cc.name}</option>`).join('')}
+        ${S.banks.map(b=>`<option value="bank_${b.id}" ${currentPay==='bank_'+b.id?'selected':''}>🏦 ${b.name} (העברה)</option>`).join('')}
+      </select></div>
+
+    <div class="fg" id="etx-bank-g" style="${isInc?'':'display:none'}">
+      <label class="fl">לחשבון בנק</label>
+      <select class="fs" id="etx-bank">${S.banks.map(b=>`<option value="${b.id}" ${b.id===tx.bankId?'selected':''}>${b.name}</option>`).join('')}</select></div>
+
+    <div class="fg" id="etx-from-g" style="${isTransfer?'':'display:none'}">
+      <label class="fl">מחשבון</label>
+      <select class="fs" id="etx-from">${S.banks.map(b=>`<option value="${b.id}" ${b.id===tx.fromBankId?'selected':''}>${b.name}</option>`).join('')}</select></div>
+
+    <div class="fg" id="etx-to-g" style="${isTransfer?'':'display:none'}">
+      <label class="fl">לחשבון</label>
+      <select class="fs" id="etx-to">${S.banks.map(b=>`<option value="${b.id}" ${b.id===tx.toBankId?'selected':''}>${b.name}</option>`).join('')}</select></div>
+
     <div class="fg"><label class="fl">הערה</label><input class="fi" id="etx-note" value="${tx.note||''}"></div>
     <button class="btn-primary" onclick="saveEditTx(${id})">שמור שינויים</button>
     <button class="btn-danger" onclick="deleteTx(${id})">🗑 מחק פעולה</button>
@@ -1344,14 +1438,40 @@ function editTxModal(id) {
   `);
 }
 
+function etxTypeChange() {
+  const t = document.getElementById('etx-type').value;
+  const show = (id,v) => { const el=document.getElementById(id); if(el) el.style.display=v?'':'none'; };
+  show('etx-cat-g',  t==='expense');
+  show('etx-icat-g', t==='income');
+  show('etx-pay-g',  t==='expense');
+  show('etx-bank-g', t==='income');
+  show('etx-from-g', t==='transfer');
+  show('etx-to-g',   t==='transfer');
+}
+
 function saveEditTx(id) {
   const tx = S.txs.find(t=>t.id===id);
   if (!tx) return;
+  tx.type   = document.getElementById('etx-type').value;
   tx.name   = document.getElementById('etx-name').value;
   tx.amount = parseFloat(document.getElementById('etx-amt').value);
   tx.date   = document.getElementById('etx-date').value;
-  tx.catId  = parseInt(document.getElementById('etx-cat').value);
   tx.note   = document.getElementById('etx-note').value;
+
+  if (tx.type==='expense') {
+    tx.catId = parseInt(document.getElementById('etx-cat').value);
+    const pay = document.getElementById('etx-pay').value;
+    if (pay.startsWith('credit_')) { tx.payMethod='credit'; tx.creditId=parseInt(pay.split('_')[1]); delete tx.bankId; }
+    else if (pay.startsWith('bank_')) { tx.payMethod='bank'; tx.bankId=parseInt(pay.split('_')[1]); delete tx.creditId; }
+    else { tx.payMethod='cash'; delete tx.bankId; delete tx.creditId; }
+  } else if (tx.type==='income') {
+    tx.catId  = parseInt(document.getElementById('etx-icat').value);
+    tx.bankId = parseInt(document.getElementById('etx-bank').value);
+  } else {
+    tx.fromBankId = parseInt(document.getElementById('etx-from').value);
+    tx.toBankId   = parseInt(document.getElementById('etx-to').value);
+  }
+
   closeModal(); render(); fbSave();
   toast('✅ פעולה עודכנה','success');
 }
@@ -1623,11 +1743,12 @@ function saveUsername() {
 }
 
 function showInviteModal() {
-  const url = window.location.origin;
+  const wsId = S.workspaceId || S.fbUser?.uid;
+  const url = window.location.origin + window.location.pathname + '?ws=' + wsId;
   openModal(`
     <div class="modal-hdr"><div class="modal-title">הזמן לסביבת עבודה</div><div class="modal-close" onclick="closeModal()">×</div></div>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">שתף את הקישור עם בן/בת הזוג:</p>
-    <div style="background:var(--bg3);border-radius:var(--rs);padding:13px;font-size:12px;color:var(--accent);word-break:break-all;cursor:pointer" onclick="copyInvite('${url}')">${url}</div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">שתף את הקישור עם בן/בת הזוג. מי שייכנס דרכו יצורף לסביבת העבודה שלך:</p>
+    <div style="background:var(--bg3);border-radius:var(--rs);padding:13px;font-size:11px;color:var(--accent);word-break:break-all;cursor:pointer" onclick="copyInvite('${url}')">${url}</div>
     <button class="btn-primary" style="margin-top:12px" onclick="copyInvite('${url}')">📋 העתק קישור</button>
     <button class="btn-secondary" onclick="closeModal()">סגור</button>
   `);
