@@ -729,6 +729,7 @@ let S = {
   dailyTime: '21:00',
   approvalMode: 'all',
   monthStartDay: 1,
+  declinedFixed: [],   // [{ fixedId, month, year }] – declined per billing cycle
 };
 
 // ═══════════════════════════════════════════════
@@ -792,23 +793,42 @@ async function fbLoad(uid) {
 
     if (snap.exists) {
       const d = snap.data();
-      if (d.banks)    S.banks   = d.banks;
-      if (d.credits)  S.credits = d.credits;
-      if (d.fixed)    S.fixed   = d.fixed;
-      if (d.txs)      S.txs     = d.txs;
-      if (d.cats)     S.cats    = d.cats;
-      if (d.icats)    S.icats   = d.icats;
+      if (d.banks)       S.banks       = d.banks;
+      if (d.credits)     S.credits     = d.credits;
+      if (d.fixed)       S.fixed       = d.fixed;
+      if (d.txs)         S.txs         = d.txs;
+      if (d.cats)        S.cats        = d.cats;
+      if (d.icats)       S.icats       = d.icats;
       if (d.fixedIncome) S.fixedIncome = d.fixedIncome;
-      if (d.members)  S.members = d.members;
+      if (d.members)     S.members     = d.members;
       if (d.notifDays !== undefined) S.notifDays = d.notifDays;
-      if (d.dailyTime) S.dailyTime = d.dailyTime;
+      if (d.dailyTime)   S.dailyTime   = d.dailyTime;
       if (d.monthStartDay !== undefined) S.monthStartDay = d.monthStartDay;
-      if (d.user) {
-        S.user = d.user;
+      if (d.declinedFixed) S.declinedFixed = d.declinedFixed;
+
+      // Identify current user by their Firebase uid inside the members array
+      let myMember = S.members.find(m => m.uid === uid);
+
+      if (!myMember && existingWorkspaceId === uid) {
+        // Migration: owner whose member entry predates uid tracking – claim the מנהל slot
+        const ownerSlot = S.members.find(m => m.role === 'מנהל' && !m.uid);
+        if (ownerSlot) {
+          ownerSlot.uid = uid;
+          myMember = ownerSlot;
+        } else if (d.user) {
+          // Very old data: only a global 'user' field, no members array
+          myMember = { ...d.user, uid, role: 'מנהל' };
+          S.members = [myMember];
+        }
+      }
+
+      if (myMember) {
+        S.user = { ...myMember, email: S.fbUser?.email || '' };
         enterApp();
         return;
       }
     }
+    // Current user not found in workspace members → show onboarding
     showScreen('onboarding');
   } catch(e) {
     console.error(e);
@@ -823,7 +843,7 @@ async function fbJoinWorkspace(uid, wsId) {
     S.workspaceId = wsId;
     // Clean URL
     window.history.replaceState({}, document.title, window.location.pathname);
-    // Load shared workspace data into S so new member is added to the existing list
+    // Load shared workspace data so new member is appended to the existing list
     const snap = await fbDb.collection('workspaces').doc(wsId).collection('data').doc('main').get();
     if (snap.exists) {
       const d = snap.data();
@@ -838,8 +858,9 @@ async function fbJoinWorkspace(uid, wsId) {
       if (d.notifDays !== undefined) S.notifDays = d.notifDays;
       if (d.dailyTime)   S.dailyTime   = d.dailyTime;
       if (d.monthStartDay !== undefined) S.monthStartDay = d.monthStartDay;
+      if (d.declinedFixed) S.declinedFixed = d.declinedFixed;
     }
-    // Show onboarding so new user can pick their name; obSubmit will add them to members
+    // Show onboarding so user can pick/confirm their name in this workspace
     showScreen('onboarding');
   } catch(e) {
     console.error(e);
@@ -849,11 +870,18 @@ async function fbJoinWorkspace(uid, wsId) {
 
 function fbSave() {
   if (!S.fbUser || !S.workspaceId) return;
+  // Keep the current user's member entry up to date (name, initials, color, role, uid)
+  if (S.user && S.fbUser.uid) {
+    const mi = S.members.findIndex(m => m.uid === S.fbUser.uid);
+    const entry = { uid: S.fbUser.uid, name: S.user.name, initials: S.user.initials, color: S.user.color, role: S.user.role };
+    if (mi >= 0) S.members[mi] = { ...S.members[mi], ...entry };
+    else S.members.push(entry);
+  }
   fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').set({
-    user: S.user, banks: S.banks, credits: S.credits, fixed: S.fixed,
-    fixedIncome: S.fixedIncome,
-    txs: S.txs, cats: S.cats, icats: S.icats, members: S.members,
-    notifDays: S.notifDays, dailyTime: S.dailyTime, monthStartDay: S.monthStartDay,
+    banks: S.banks, credits: S.credits, fixed: S.fixed,
+    fixedIncome: S.fixedIncome, txs: S.txs, cats: S.cats, icats: S.icats,
+    members: S.members, notifDays: S.notifDays, dailyTime: S.dailyTime,
+    monthStartDay: S.monthStartDay, declinedFixed: S.declinedFixed,
     savedAt: new Date().toISOString(),
   }).catch(e => console.error('save error', e));
 }
@@ -887,12 +915,18 @@ function gLogin() {
 function obSubmit() {
   const name = document.getElementById('ob-name').value.trim();
   if (!name) { alert('נא להזין שם משתמש'); return; }
+  const uid = S.fbUser?.uid || ('demo_' + Date.now());
   const colors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
-  const color = colors[S.members.length % colors.length];
-  S.user = { name, email: S.fbUser?.email || 'demo', initials: name[0].toUpperCase(), color };
-  if (!S.workspaceId) S.workspaceId = S.fbUser?.uid || ('ws_' + Date.now());
-  if (!S.members.find(m => m.name === name))
-    S.members.push({ name, initials: name[0].toUpperCase(), color, role: S.members.length === 0 ? 'מנהל' : 'חבר' });
+  // First real member (no prior מנהל) becomes owner; everyone else is חבר
+  const isFirstMember = !S.members.some(m => m.role === 'מנהל');
+  const role = isFirstMember ? 'מנהל' : 'חבר';
+  const color = colors[S.members.filter(m => m.uid !== uid).length % colors.length];
+  const member = { uid, name, initials: name[0].toUpperCase(), color, role };
+  // Replace any prior entry for this uid (e.g. re-joining)
+  S.members = S.members.filter(m => m.uid !== uid);
+  S.members.push(member);
+  S.user = { ...member, email: S.fbUser?.email || '' };
+  if (!S.workspaceId) S.workspaceId = uid;
   showScreen('tutorial');
   tutGo(0);
 }
@@ -947,9 +981,11 @@ function autoCreateFixedTxs() {
   const month = today.getMonth();
   const year = today.getFullYear();
 
-  // Auto-create expense fixed that have passed this month
+  const isDeclined = (feId) => S.declinedFixed.some(x => x.fixedId === feId && x.month === month && x.year === year);
+
+  // Auto-create expense fixed that have passed this month (skip declined ones)
   S.fixed.forEach(fe => {
-    if (fe.day <= todayDay) {
+    if (fe.day <= todayDay && !isDeclined(fe.id)) {
       const alreadyExists = S.txs.find(t =>
         t.fixedId === fe.id &&
         new Date(t.date).getMonth() === month &&
@@ -1075,13 +1111,57 @@ function creditSpent(ccId, month, year) {
     new Date(t.date).getMonth()===month && new Date(t.date).getFullYear()===year
   ).reduce((s,t) => s+t.amount, 0);
 }
-// Credit spend within the custom billing cycle (used for dashboard display)
-function creditSpentInCycle(ccId) {
-  const { start, end } = getCycleDates();
-  return S.txs.filter(t =>
-    t.type==='expense' && t.payMethod==='credit' && t.creditId===ccId &&
-    new Date(t.date) >= start && new Date(t.date) <= end
-  ).reduce((s,t) => s+t.amount, 0);
+// Per-card billing cycle: day after chargeDate last month → chargeDate this month
+function creditCardCycleDates(cc) {
+  const cd = cc.chargeDate;
+  // Use S.month/S.year so navigating to a different month updates the display
+  const start = new Date(S.year, S.month - 1, cd + 1);
+  const end   = new Date(S.year, S.month,     cd);
+  return { start, end };
+}
+
+// Total accumulated on a credit card in its billing cycle.
+// Includes: recorded txs + fixed expenses in cycle without a tx yet (excl. declined)
+function creditCardCycleTotal(cc) {
+  const { start, end } = creditCardCycleDates(cc);
+  const today = new Date();
+  const curM = today.getMonth(), curY = today.getFullYear();
+
+  // Recorded transactions for this card in the cycle
+  const cycleTxs = S.txs.filter(t => {
+    if (t.type !== 'expense' || t.payMethod !== 'credit' || t.creditId !== cc.id) return false;
+    const d = new Date(t.date);
+    return d >= start && d <= end;
+  });
+  const txTotal = cycleTxs.reduce((s, t) => s + t.amount, 0);
+
+  // Fixed expenses for this card in the cycle that don't yet have a recorded tx
+  const fixedExtra = S.fixed.filter(fe => {
+    if (fe.payMethod !== 'credit' || fe.creditId !== cc.id) return false;
+    if (S.declinedFixed.some(x => x.fixedId === fe.id && x.month === curM && x.year === curY)) return false;
+    // Find which date this fixed day lands on inside the credit cycle
+    const inPrev = new Date(start.getFullYear(), start.getMonth(), fe.day);
+    const inCurr = new Date(end.getFullYear(),   end.getMonth(),   fe.day);
+    const fDate = (inPrev >= start && inPrev <= end) ? inPrev
+                : (inCurr >= start && inCurr <= end) ? inCurr : null;
+    if (!fDate) return false;
+    // Only if no tx already covers it in this cycle
+    return !S.txs.some(t => t.fixedId === fe.id && (() => { const d = new Date(t.date); return d >= start && d <= end; })());
+  });
+  const fixedTotal = fixedExtra.reduce((s, fe) => s + fe.amount, 0);
+  const total = txTotal + fixedTotal;
+
+  // Optional split by monthStartDay periods
+  const msd = S.monthStartDay || 1;
+  const splitDate = new Date(S.year, S.month, msd); // e.g. April 10
+  let periods = null;
+  if (msd > 1 && splitDate > start && splitDate <= end) {
+    const splitEnd = new Date(splitDate.getTime() - 86400000);
+    const pA = cycleTxs.filter(t => new Date(t.date) <= splitEnd).reduce((s,t) => s+t.amount, 0);
+    const pB = cycleTxs.filter(t => new Date(t.date) >= splitDate).reduce((s,t) => s+t.amount, 0);
+    periods = [pA, pB];
+  }
+  return { total, periods, start, end };
 }
 
 function bankStatus(bank) {
@@ -1117,19 +1197,20 @@ function getCycleDates() {
   return { start, end };
 }
 
-// Fixed expenses that fall within the current billing cycle and have no recorded tx yet
+// Fixed expenses that fall within the current billing cycle, haven't been paid yet, and aren't declined
 function getUnpaidFixedInCycle() {
   const { start, end } = getCycleDates();
   const today = new Date(); today.setHours(23, 59, 59, 999);
   const day = S.monthStartDay || 1;
+  const curM = new Date().getMonth(), curY = new Date().getFullYear();
   return S.fixed.filter(fe => {
+    if (S.declinedFixed.some(x => x.fixedId === fe.id && x.month === curM && x.year === curY)) return false;
     // Which calendar date does this fixed expense land on inside this cycle?
     const fDate = fe.day >= day
-      ? new Date(S.year, S.month, fe.day)         // in the "from" month
-      : new Date(S.year, S.month + 1, fe.day);    // in the "to" month
+      ? new Date(S.year, S.month, fe.day)
+      : new Date(S.year, S.month + 1, fe.day);
     if (fDate < start || fDate > end) return false;
-    if (fDate <= today) return false; // past dates are already auto-created as txs
-    // Future dates: only include if not already recorded in this cycle
+    if (fDate <= today) return false; // past → already auto-created
     return !S.txs.some(t => {
       if (t.fixedId !== fe.id) return false;
       const d = new Date(t.date);
@@ -1247,15 +1328,19 @@ function renderCreditCards() {
   if (!S.credits.length) { c.innerHTML = '<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">אין כרטיסים עדיין</div></div>'; return; }
   c.innerHTML = S.credits.map(cc => {
     const bank = S.banks.find(b=>b.id===cc.bankId);
-    const spent = creditSpentInCycle(cc.id);
-    const { start, end } = getCycleDates();
+    const result = creditCardCycleTotal(cc);
     const fmt = d => d.getDate() + '/' + (d.getMonth()+1);
-    const periodLbl = (S.monthStartDay||1) === 1
-      ? MONTHS[S.month].slice(0,3)
-      : fmt(start) + '–' + fmt(end);
+    const rangeLbl = fmt(result.start) + '–' + fmt(result.end);
+    const periodRow = result.periods
+      ? `<div style="font-size:10px;color:var(--text3);margin-top:3px">תק׳ א: ${fmtAmt(result.periods[0])} | תק׳ ב: ${fmtAmt(result.periods[1])}</div>`
+      : '';
     return `<div class="cc-item" onclick="editCreditModal(${cc.id})">
-      <div><div class="cc-name">💳 ${cc.name}</div><div class="cc-info">יורד ב-${cc.chargeDate} • ${bank?.name||'?'} • ${periodLbl}</div></div>
-      <div class="cc-amount">${fmtAmt(spent)}</div>
+      <div style="flex:1">
+        <div class="cc-name">💳 ${cc.name}</div>
+        <div class="cc-info">${rangeLbl} • יורד ב-${cc.chargeDate} • ${bank?.name||'?'}</div>
+        ${periodRow}
+      </div>
+      <div class="cc-amount">${fmtAmt(result.total)}</div>
     </div>`;
   }).join('');
 }
@@ -1964,14 +2049,27 @@ function delFixed(id, isIncome) {
 // ═══════════════════════════════════════════════
 let approveItems = [];
 function showApproveModal() {
-  approveItems = S.fixed.map(fe=>({...fe,checked:true}));
-  document.getElementById('notif-badge').style.display='none';
+  const today = new Date();
+  const todayDay = today.getDate();
+  const curM = today.getMonth(), curY = today.getFullYear();
+  // Only show UPCOMING items (future days within the notif window) that aren't already declined
+  const upcoming = S.fixed.filter(fe => {
+    const daysLeft = fe.day - todayDay;
+    if (daysLeft < 0 || daysLeft > (S.notifDays || 7)) return false;
+    // exclude already-declined for this cycle
+    return !S.declinedFixed.some(x => x.fixedId === fe.id && x.month === curM && x.year === curY);
+  });
+  approveItems = upcoming.map(fe => ({...fe, checked: true}));
+  document.getElementById('notif-badge').style.display = 'none';
+  if (!approveItems.length) {
+    toast('אין חיובים קרובים לאישור','info'); return;
+  }
   openModal(`
-    <div class="modal-hdr"><div class="modal-title">אישור חיובים חודשיים</div><div class="modal-close" onclick="closeModal()">×</div></div>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">בדוק ואשר את החיובים לחודש זה. ניתן לשנות סכום לפני אישור.</p>
+    <div class="modal-hdr"><div class="modal-title">חיובים קרובים</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">סמן ✓ לאישור חיוב. בטל סימון כדי לדחות אותו לחודש הבא.</p>
     <div id="approve-list">${renderApproveItems()}</div>
-    <button class="btn-primary" style="margin-top:12px" onclick="submitApprove()">✅ אשר מסומנים</button>
-    <button class="btn-secondary" onclick="closeModal()">ביטול – יציאה ללא אישור</button>
+    <button class="btn-primary" style="margin-top:12px" onclick="submitApprove()">✅ שמור</button>
+    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
   `);
 }
 function renderApproveItems() {
@@ -1987,13 +2085,32 @@ function renderApproveItems() {
 function toggleApprove(i) { approveItems[i].checked=!approveItems[i].checked; document.getElementById('approve-list').innerHTML=renderApproveItems(); }
 function editApproveAmt(i) { const v=prompt('סכום חדש:',approveItems[i].amount); if(v&&!isNaN(v)){approveItems[i].amount=parseFloat(v); document.getElementById('approve-list').innerHTML=renderApproveItems();} }
 function submitApprove() {
-  const approved=approveItems.filter(fe=>fe.checked);
-  approved.forEach(fe=>{
-    const d=new Date(); d.setDate(fe.day);
-    S.txs.push({id:Date.now()+fe.id,type:'expense',name:fe.name,amount:fe.amount,date:d.toISOString().split('T')[0],catId:fe.catId,payMethod:fe.payMethod,bankId:fe.bankId,creditId:fe.creditId,note:'חיוב קבוע',fixed:true});
-    if(fe.payMethod==='bank'){const b=S.banks.find(x=>x.id===fe.bankId);if(b)b.balance-=fe.amount;}
+  const today = new Date();
+  const curM = today.getMonth(), curY = today.getFullYear();
+  const declined = approveItems.filter(fe => !fe.checked);
+  const approved  = approveItems.filter(fe =>  fe.checked);
+  // Record declines for this cycle only (they clear automatically next month)
+  declined.forEach(fe => {
+    S.declinedFixed = S.declinedFixed.filter(x => !(x.fixedId === fe.id && x.month === curM && x.year === curY));
+    S.declinedFixed.push({ fixedId: fe.id, month: curM, year: curY });
   });
-  closeModal(); render(); fbSave(); toast(`✅ ${approved.length} חיובים אושרו`,'success');
+  // Approved items: create txs now (they haven't passed yet, so autoCreate hasn't done it)
+  approved.forEach(fe => {
+    const already = S.txs.find(t => t.fixedId === fe.id && new Date(t.date).getMonth() === curM && new Date(t.date).getFullYear() === curY);
+    if (!already) {
+      const d = new Date(curY, curM, fe.day);
+      S.txs.push({ id: Date.now()+fe.id, type:'expense', name:fe.name, amount:fe.amount,
+        date: d.toISOString().split('T')[0], catId:fe.catId, payMethod:fe.payMethod,
+        bankId:fe.bankId, creditId:fe.creditId, note:'חיוב קבוע', fixedId:fe.id });
+      if (fe.payMethod==='bank') { const b=S.banks.find(x=>x.id===fe.bankId); if(b) b.balance-=fe.amount; }
+    }
+  });
+  closeModal(); render(); fbSave();
+  const msg = [
+    approved.length  ? `✅ ${approved.length} אושרו`  : '',
+    declined.length  ? `⏭ ${declined.length} נדחו לחודש הבא` : '',
+  ].filter(Boolean).join(' | ');
+  toast(msg || '✅ נשמר', 'success');
 }
 
 // ═══════════════════════════════════════════════
@@ -2152,8 +2269,14 @@ function showHelp() {
 // UPCOMING NOTIFICATION
 // ═══════════════════════════════════════════════
 function checkUpcomingNotif() {
-  const today = new Date().getDate();
-  const soon = S.fixed.filter(fe => fe.day - today >= 0 && fe.day - today <= S.notifDays);
+  const today = new Date();
+  const todayDay = today.getDate();
+  const curM = today.getMonth(), curY = today.getFullYear();
+  const soon = S.fixed.filter(fe => {
+    const left = fe.day - todayDay;
+    if (left < 0 || left > S.notifDays) return false;
+    return !S.declinedFixed.some(x => x.fixedId === fe.id && x.month === curM && x.year === curY);
+  });
   const badge = document.getElementById('notif-badge');
   if (soon.length) {
     badge.style.display = 'flex';
