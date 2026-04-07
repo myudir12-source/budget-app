@@ -827,6 +827,19 @@ async function fbLoad(uid) {
         enterApp();
         return;
       }
+
+      // User not in members but has a saved profile in userMeta → auto-add without onboarding
+      if (userMeta.exists && userMeta.data().name) {
+        const meta = userMeta.data();
+        const memberColors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
+        const role = (existingWorkspaceId === uid) ? 'מנהל' : (meta.role || (!S.members.some(m => m.role === 'מנהל') ? 'מנהל' : 'חבר'));
+        myMember = { uid, name: meta.name, initials: meta.initials || meta.name[0].toUpperCase(), color: meta.color || memberColors[S.members.length % memberColors.length], role };
+        S.members.push(myMember);
+        S.user = { ...myMember, email: S.fbUser?.email || '' };
+        enterApp();
+        fbSave();
+        return;
+      }
     }
     // Current user not found in workspace members → show onboarding
     showScreen('onboarding');
@@ -860,7 +873,27 @@ async function fbJoinWorkspace(uid, wsId) {
       if (d.monthStartDay !== undefined) S.monthStartDay = d.monthStartDay;
       if (d.declinedFixed) S.declinedFixed = d.declinedFixed;
     }
-    // Show onboarding so user can pick/confirm their name in this workspace
+    // Check if already in members by uid
+    let joinedMember = S.members.find(m => m.uid === uid);
+    if (joinedMember) {
+      S.user = { ...joinedMember, email: S.fbUser?.email || '' };
+      enterApp();
+      return;
+    }
+    // Check if user has a saved profile in userMeta → auto-add without onboarding
+    const joinerMeta = await fbDb.collection('userMeta').doc(uid).get();
+    if (joinerMeta.exists && joinerMeta.data().name) {
+      const meta = joinerMeta.data();
+      const memberColors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
+      const isFirst = !S.members.some(m => m.role === 'מנהל');
+      const member = { uid, name: meta.name, initials: meta.initials || meta.name[0].toUpperCase(), color: meta.color || memberColors[S.members.length % memberColors.length], role: isFirst ? 'מנהל' : 'חבר' };
+      S.members.push(member);
+      S.user = { ...member, email: S.fbUser?.email || '' };
+      enterApp();
+      fbSave();
+      return;
+    }
+    // New user with no saved profile → show onboarding
     showScreen('onboarding');
   } catch(e) {
     console.error(e);
@@ -927,6 +960,13 @@ function obSubmit() {
   S.members.push(member);
   S.user = { ...member, email: S.fbUser?.email || '' };
   if (!S.workspaceId) S.workspaceId = uid;
+  // Persist user profile in userMeta so future logins skip onboarding
+  if (S.fbUser?.uid) {
+    fbDb.collection('userMeta').doc(S.fbUser.uid).set(
+      { name: member.name, initials: member.initials, color: member.color, role: member.role },
+      { merge: true }
+    ).catch(() => {});
+  }
   showScreen('tutorial');
   tutGo(0);
 }
@@ -1111,6 +1151,11 @@ function creditSpent(ccId, month, year) {
     new Date(t.date).getMonth()===month && new Date(t.date).getFullYear()===year
   ).reduce((s,t) => s+t.amount, 0);
 }
+// Format a local Date as YYYY-MM-DD for timezone-safe string comparison
+function localDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 // Per-card billing cycle: day after chargeDate last month → chargeDate this month
 function creditCardCycleDates(cc) {
   const cd = cc.chargeDate;
@@ -1124,44 +1169,49 @@ function creditCardCycleDates(cc) {
 // Includes: recorded txs + fixed expenses in cycle without a tx yet (excl. declined)
 function creditCardCycleTotal(cc) {
   const { start, end } = creditCardCycleDates(cc);
-  const today = new Date();
-  const curM = today.getMonth(), curY = today.getFullYear();
+  // Use local date strings to avoid timezone-related miscounting
+  const startStr = localDateStr(start);
+  const endStr   = localDateStr(end);
 
-  // Recorded transactions for this card in the cycle
+  // Recorded transactions for this card in the cycle (string comparison = timezone-safe)
   const cycleTxs = S.txs.filter(t => {
     if (t.type !== 'expense' || t.payMethod !== 'credit' || t.creditId !== cc.id) return false;
-    const d = new Date(t.date);
-    return d >= start && d <= end;
+    return t.date >= startStr && t.date <= endStr;
   });
   const txTotal = cycleTxs.reduce((s, t) => s + t.amount, 0);
 
   // Fixed expenses for this card in the cycle that don't yet have a recorded tx
   const fixedExtra = S.fixed.filter(fe => {
     if (fe.payMethod !== 'credit' || fe.creditId !== cc.id) return false;
-    if (S.declinedFixed.some(x => x.fixedId === fe.id && x.month === curM && x.year === curY)) return false;
-    // Find which date this fixed day lands on inside the credit cycle
-    const inPrev = new Date(start.getFullYear(), start.getMonth(), fe.day);
-    const inCurr = new Date(end.getFullYear(),   end.getMonth(),   fe.day);
-    const fDate = (inPrev >= start && inPrev <= end) ? inPrev
-                : (inCurr >= start && inCurr <= end) ? inCurr : null;
-    if (!fDate) return false;
-    // Only if no tx already covers it in this cycle
-    return !S.txs.some(t => t.fixedId === fe.id && (() => { const d = new Date(t.date); return d >= start && d <= end; })());
+    // Determine which date this fixed day lands on inside the credit cycle
+    const inPrevStr = localDateStr(new Date(start.getFullYear(), start.getMonth(), fe.day));
+    const inCurrStr = localDateStr(new Date(end.getFullYear(),   end.getMonth(),   fe.day));
+    const fDateStr  = (inPrevStr >= startStr && inPrevStr <= endStr) ? inPrevStr
+                    : (inCurrStr >= startStr && inCurrStr <= endStr) ? inCurrStr : null;
+    if (!fDateStr) return false;
+    // Check declined for the calendar month this fixed expense actually falls in
+    const fMonth = parseInt(fDateStr.slice(5,7)) - 1; // 0-indexed
+    const fYear  = parseInt(fDateStr.slice(0,4));
+    if (S.declinedFixed.some(x => x.fixedId === fe.id && x.month === fMonth && x.year === fYear)) return false;
+    // Only include if no tx with this fixedId already exists in the cycle
+    return !S.txs.some(t => t.fixedId === fe.id && t.date >= startStr && t.date <= endStr);
   });
   const fixedTotal = fixedExtra.reduce((s, fe) => s + fe.amount, 0);
   const total = txTotal + fixedTotal;
 
-  // Optional split by monthStartDay periods
-  const msd = S.monthStartDay || 1;
-  const splitDate = new Date(S.year, S.month, msd); // e.g. April 10
-  let periods = null;
-  if (msd > 1 && splitDate > start && splitDate <= end) {
-    const splitEnd = new Date(splitDate.getTime() - 86400000);
-    const pA = cycleTxs.filter(t => new Date(t.date) <= splitEnd).reduce((s,t) => s+t.amount, 0);
-    const pB = cycleTxs.filter(t => new Date(t.date) >= splitDate).reduce((s,t) => s+t.amount, 0);
+  // Optional split by billing months: group txs by which calendar month they're in
+  // Period A = start month, Period B = end month (when different months span the cycle)
+  let periods = null, periodMonths = null;
+  const startMon = start.getMonth(), endMon = end.getMonth();
+  if (startMon !== endMon || start.getFullYear() !== end.getFullYear()) {
+    const startMonPrefix = localDateStr(start).slice(0,7); // "YYYY-MM"
+    const pA = cycleTxs.filter(t => t.date.slice(0,7) === startMonPrefix).reduce((s,t) => s+t.amount, 0);
+    const pB = cycleTxs.filter(t => t.date.slice(0,7) !== startMonPrefix).reduce((s,t) => s+t.amount, 0);
+    // Only show split when both periods have amounts or there's a meaningful split
     periods = [pA, pB];
+    periodMonths = [MONTHS[startMon], MONTHS[endMon]];
   }
-  return { total, periods, start, end };
+  return { total, periods, periodMonths, fixedExtra, cycleTxs, start, end, startStr, endStr };
 }
 
 function bankStatus(bank) {
@@ -1178,10 +1228,10 @@ function bankStatus(bank) {
       upcoming += creditSpent(cc.id, today.getMonth(), today.getFullYear());
   });
   const rem = bank.balance - upcoming;
-  if (rem >= 2500) return { cls: 's-green', dot: '#2ecc71', upcoming };
-  if (rem >= 500)  return { cls: 's-yellow', dot: '#f39c12', upcoming };
-  if (rem >= 0)    return { cls: 's-orange', dot: '#e67e22', upcoming };
-  return { cls: 's-red', dot: '#e74c3c', upcoming };
+  if (rem >= 2500) return { cls: 's-green', dot: '#2ecc71', upcoming, rem };
+  if (rem >= 500)  return { cls: 's-yellow', dot: '#f39c12', upcoming, rem };
+  if (rem >= 0)    return { cls: 's-orange', dot: '#e67e22', upcoming, rem };
+  return { cls: 's-red', dot: '#e74c3c', upcoming, rem };
 }
 
 function catById(id, income) { return (income ? S.icats : S.cats).find(c => c.id === id) || {icon:'📦',name:'אחר',color:'#607d8b'}; }
@@ -1314,10 +1364,14 @@ function renderBankCards() {
   if (!S.banks.length) { c.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px">אין חשבונות עדיין. הוסף בהגדרות.</div>'; return; }
   c.innerHTML = S.banks.map(b => {
     const st = bankStatus(b);
+    const overdraftRow = st.rem < 0
+      ? `<div style="color:var(--red);font-size:10px;margin-top:3px;font-weight:600">⚠️ חריגה: ${fmtAmt(Math.abs(st.rem))}</div>`
+      : '';
     return `<div class="bank-card ${st.cls}" onclick="showBankDetail(${b.id})">
       <div class="bank-card-name">${b.name}</div>
       <div class="bank-card-balance">${fmtAmt(b.balance)}</div>
       <div class="bank-card-info"><span class="status-dot" style="background:${st.dot}"></span>יורד ב-5 ימים: ${fmtAmt(st.upcoming)}</div>
+      ${overdraftRow}
     </div>`;
   }).join('');
 }
@@ -1332,9 +1386,9 @@ function renderCreditCards() {
     const fmt = d => d.getDate() + '/' + (d.getMonth()+1);
     const rangeLbl = fmt(result.start) + '–' + fmt(result.end);
     const periodRow = result.periods
-      ? `<div style="font-size:10px;color:var(--text3);margin-top:3px">תק׳ א: ${fmtAmt(result.periods[0])} | תק׳ ב: ${fmtAmt(result.periods[1])}</div>`
+      ? `<div style="font-size:10px;color:var(--text3);margin-top:3px">${result.periodMonths[0]}: ${fmtAmt(result.periods[0])} | ${result.periodMonths[1]}: ${fmtAmt(result.periods[1])}</div>`
       : '';
-    return `<div class="cc-item" onclick="editCreditModal(${cc.id})">
+    return `<div class="cc-item" onclick="showCreditDetail(${cc.id})">
       <div style="flex:1">
         <div class="cc-name">💳 ${cc.name}</div>
         <div class="cc-info">${rangeLbl} • יורד ב-${cc.chargeDate} • ${bank?.name||'?'}</div>
@@ -1901,7 +1955,176 @@ function saveEditBank(id) {
   closeModal(); render(); renderSettings(); fbSave(); toast('✅ עודכן','success');
 }
 function delBank(id) { if(!confirm('למחוק?')) return; S.banks=S.banks.filter(b=>b.id!==id); closeModal(); render(); renderSettings(); fbSave(); }
-function showBankDetail(id) { editBankModal(id); }
+
+function showBankDetail(id) {
+  const b = S.banks.find(x => x.id === id); if (!b) return;
+  const st = bankStatus(b);
+  const rem = st.rem;
+  const balColor = rem < 0 ? 'var(--red)' : rem < 500 ? 'var(--orange)' : 'var(--green)';
+
+  // Bank txs for the displayed month
+  const bankTxs = S.txs.filter(t => {
+    if (t.payMethod !== 'bank' || t.bankId !== b.id) return false;
+    const d = new Date(t.date);
+    return d.getMonth() === S.month && d.getFullYear() === S.year;
+  }).sort((a, bx) => bx.date.localeCompare(a.date));
+
+  const bankTxsHtml = bankTxs.length
+    ? bankTxs.map(t => {
+        const isIn = t.type === 'income';
+        const cat = catById(t.catId, isIn);
+        const d = new Date(t.date);
+        return `<div class="tx-item" onclick="editTxModal(${t.id})">
+          <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+          <div class="tx-info"><div class="tx-name">${t.name}</div><div class="tx-detail">${d.getDate()}/${d.getMonth()+1}</div></div>
+          <div class="tx-amount ${isIn?'pos':'neg'}">${isIn?'+':'-'} ${fmtAmt(t.amount)}</div>
+        </div>`;
+      }).join('')
+    : '<div class="empty"><div class="empty-text">אין עסקאות בנק החודש</div></div>';
+
+  // Linked credit cards
+  const linkedCCs = S.credits.filter(cc => cc.bankId === b.id);
+  const ccHtml = linkedCCs.length
+    ? linkedCCs.map(cc => {
+        const r = creditCardCycleTotal(cc);
+        const fmt = d => d.getDate() + '/' + (d.getMonth()+1);
+        return `<div class="cc-item" onclick="closeModal();setTimeout(()=>showCreditDetail(${cc.id}),100)">
+          <div style="flex:1">
+            <div class="cc-name">💳 ${cc.name}</div>
+            <div class="cc-info">${fmt(r.start)}–${fmt(r.end)} • יורד ב-${cc.chargeDate}</div>
+          </div>
+          <div class="cc-amount">${fmtAmt(r.total)}</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--text3);font-size:12px;padding:8px 0">אין כרטיסי אשראי מקושרים</div>';
+
+  const overdraftNote = rem < 0
+    ? `<div style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;color:var(--red);font-size:13px">⚠️ חריגת יתרה: ${fmtAmt(Math.abs(rem))}</div>`
+    : '';
+
+  openModal(`
+    <div class="modal-hdr">
+      <div class="modal-title">🏦 ${b.name}</div>
+      <div class="modal-close" onclick="closeModal()">×</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">יתרה</div>
+        <div style="font-size:20px;font-weight:700">${fmtAmt(b.balance)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">יורד ב-5 ימים</div>
+        <div style="font-size:20px;font-weight:700;color:var(--orange)">${fmtAmt(st.upcoming)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">נשאר</div>
+        <div style="font-size:20px;font-weight:700;color:${balColor}">${fmtAmt(rem)}</div>
+      </div>
+    </div>
+    ${overdraftNote}
+    <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">כרטיסי אשראי מקושרים</div>
+    <div style="margin-bottom:14px">${ccHtml}</div>
+    <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">עסקאות בנק – ${MONTHS[S.month]}</div>
+    <div style="margin-bottom:14px">${bankTxsHtml}</div>
+    <button class="btn-secondary" onclick="closeModal();editBankModal(${b.id})">✏️ ערוך חשבון</button>
+  `);
+}
+
+function showCreditDetail(id) {
+  const cc = S.credits.find(x => x.id === id); if (!cc) return;
+  const bank = S.banks.find(b => b.id === cc.bankId);
+  const result = creditCardCycleTotal(cc);
+  const { cycleTxs, fixedExtra, startStr, endStr, periodMonths } = result;
+  const fmt = d => d.getDate() + '/' + (d.getMonth()+1);
+
+  // Group txs and fixed items by calendar month within cycle
+  const startMonPrefix = startStr.slice(0,7);
+  const txsA = cycleTxs.filter(t => t.date.slice(0,7) === startMonPrefix).sort((a,b)=>a.date.localeCompare(b.date));
+  const txsB = cycleTxs.filter(t => t.date.slice(0,7) !== startMonPrefix).sort((a,b)=>a.date.localeCompare(b.date));
+  const fixedA = fixedExtra.filter(fe => {
+    const inPrev = localDateStr(new Date(result.start.getFullYear(), result.start.getMonth(), fe.day));
+    return inPrev >= startStr && inPrev <= endStr && inPrev.slice(0,7) === startMonPrefix;
+  });
+  const fixedB = fixedExtra.filter(fe => !fixedA.includes(fe));
+
+  const renderTxRow = t => {
+    const cat = catById(t.catId, false);
+    const d = new Date(t.date);
+    return `<div class="tx-item" onclick="editTxModal(${t.id})">
+      <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="tx-info"><div class="tx-name">${t.name}</div><div class="tx-detail">${d.getDate()}/${d.getMonth()+1}${t.autoCreated?'':''}</div></div>
+      <div class="tx-amount neg">- ${fmtAmt(t.amount)}</div>
+    </div>`;
+  };
+
+  const renderFixedRow = fe => {
+    const cat = catById(fe.catId, false);
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="tx-info"><div class="tx-name">${fe.name}</div><div class="tx-detail" style="color:var(--accent2)">קבוע – צפוי</div></div>
+      <div class="tx-amount neg">- ${fmtAmt(fe.amount)}</div>
+    </div>`;
+  };
+
+  const monthNames = periodMonths || [MONTHS[result.start.getMonth()], MONTHS[result.end.getMonth()]];
+  const allSameMonth = result.start.getMonth() === result.end.getMonth() && result.start.getFullYear() === result.end.getFullYear();
+
+  let bodyHtml;
+  if (allSameMonth) {
+    const allTxs = [...txsA, ...txsB];
+    const allFixed = [...fixedA, ...fixedB];
+    bodyHtml = (allTxs.length || allFixed.length)
+      ? [...allTxs.map(renderTxRow), ...allFixed.map(renderFixedRow)].join('')
+      : '<div class="empty"><div class="empty-text">אין פעולות במחזור זה</div></div>';
+  } else {
+    const secA = txsA.length || fixedA.length
+      ? [...txsA.map(renderTxRow), ...fixedA.map(renderFixedRow)].join('')
+      : '<div class="empty" style="padding:10px"><div class="empty-text">אין פעולות</div></div>';
+    const totalA = txsA.reduce((s,t)=>s+t.amount,0) + fixedA.reduce((s,f)=>s+f.amount,0);
+    const secB = txsB.length || fixedB.length
+      ? [...txsB.map(renderTxRow), ...fixedB.map(renderFixedRow)].join('')
+      : '<div class="empty" style="padding:10px"><div class="empty-text">אין פעולות</div></div>';
+    const totalB = txsB.reduce((s,t)=>s+t.amount,0) + fixedB.reduce((s,f)=>s+f.amount,0);
+    bodyHtml = `
+      <div style="background:var(--bg3);border-radius:var(--rs);padding:4px 12px 12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 6px">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">${monthNames[0]}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--red)">${fmtAmt(totalA)}</span>
+        </div>
+        ${secA}
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--rs);padding:4px 12px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 6px">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">${monthNames[1]}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--red)">${fmtAmt(totalB)}</span>
+        </div>
+        ${secB}
+      </div>`;
+  }
+
+  openModal(`
+    <div class="modal-hdr">
+      <div class="modal-title">💳 ${cc.name}</div>
+      <div class="modal-close" onclick="closeModal()">×</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">מחזור</div>
+        <div style="font-size:13px;font-weight:600">${fmt(result.start)}–${fmt(result.end)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">חיוב ב-${cc.chargeDate}</div>
+        <div style="font-size:13px;font-weight:600">${bank?.name||'?'}</div>
+      </div>
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">סה"כ</div>
+        <div style="font-size:18px;font-weight:800;color:var(--red)">${fmtAmt(result.total)}</div>
+      </div>
+    </div>
+    ${bodyHtml}
+    <button class="btn-secondary" style="margin-top:10px" onclick="closeModal();editCreditModal(${cc.id})">✏️ ערוך כרטיס</button>
+  `);
+}
 
 // ═══════════════════════════════════════════════
 // CREDIT CARD MODALS
