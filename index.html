@@ -758,9 +758,9 @@ async function fbLoad(uid) {
     if (existingWorkspaceId) {
       S.workspaceId = existingWorkspaceId;
     } else {
-      // Create new workspace for this user
+      // Create new workspace for this user – use merge:true to preserve any existing name/color fields
       S.workspaceId = uid;
-      await fbDb.collection('userMeta').doc(uid).set({ workspaceId: uid, createdAt: new Date().toISOString() });
+      await fbDb.collection('userMeta').doc(uid).set({ workspaceId: uid, createdAt: new Date().toISOString() }, { merge: true });
     }
 
     // Load workspace data
@@ -827,21 +827,35 @@ async function fbLoad(uid) {
         enterApp();
         return;
       }
-
-      // User not in members but has a saved profile in userMeta → auto-add without onboarding
-      if (userMeta.exists && userMeta.data().name) {
-        const meta = userMeta.data();
-        const memberColors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
-        const role = (existingWorkspaceId === uid) ? 'מנהל' : (meta.role || (!S.members.some(m => m.role === 'מנהל') ? 'מנהל' : 'חבר'));
-        myMember = { uid, name: meta.name, initials: meta.initials || meta.name[0].toUpperCase(), color: meta.color || memberColors[S.members.length % memberColors.length], role };
-        S.members.push(myMember);
-        S.user = { ...myMember, email: S.fbUser?.email || '' };
-        enterApp();
-        fbSave();
-        return;
-      }
     }
-    // Current user not found in workspace members → show onboarding
+
+    // ── Fallback: user not found in workspace (or workspace doesn't exist yet) ──
+    // If userMeta has a saved profile (name set during a previous onboarding),
+    // restore the user without showing onboarding again.
+    if (userMeta.exists && userMeta.data().name) {
+      const meta = userMeta.data();
+      const memberColors = ['linear-gradient(135deg,#6c63ff,#4ecdc4)','linear-gradient(135deg,#e74c3c,#e91e63)','linear-gradient(135deg,#27ae60,#2ecc71)','linear-gradient(135deg,#f39c12,#e67e22)'];
+      const role = (existingWorkspaceId === uid || S.workspaceId === uid)
+        ? 'מנהל'
+        : (meta.role || (!S.members.some(m => m.role === 'מנהל') ? 'מנהל' : 'חבר'));
+      const restoredMember = {
+        uid,
+        name: meta.name,
+        initials: meta.initials || meta.name[0].toUpperCase(),
+        color: meta.color || memberColors[S.members.length % memberColors.length],
+        role,
+      };
+      // Add or update member in workspace
+      const mi = S.members.findIndex(m => m.uid === uid);
+      if (mi >= 0) S.members[mi] = { ...S.members[mi], ...restoredMember };
+      else S.members.push(restoredMember);
+      S.user = { ...restoredMember, email: S.fbUser?.email || '' };
+      enterApp();
+      fbSave(); // persist member into workspace so next load is faster
+      return;
+    }
+
+    // Genuinely new user with no saved profile → show onboarding
     showScreen('onboarding');
   } catch(e) {
     console.error(e);
@@ -1151,6 +1165,37 @@ function creditSpent(ccId, month, year) {
     new Date(t.date).getMonth()===month && new Date(t.date).getFullYear()===year
   ).reduce((s,t) => s+t.amount, 0);
 }
+
+// Returns the total for a credit card's CURRENT (today-based) billing cycle.
+// Fixes bankStatus/renderTopbarBalance which previously used calendar-month creditSpent
+// and missed transactions from the prior calendar month that fall in the billing period.
+function ccCycleTotalNow(cc) {
+  const today = new Date();
+  const m = today.getMonth(), y = today.getFullYear();
+  const cd = cc.chargeDate;
+  const start = new Date(y, m - 1, cd + 1);
+  const end   = new Date(y, m,     cd);
+  const startStr = localDateStr(start);
+  const endStr   = localDateStr(end);
+  const txTotal = S.txs.filter(t =>
+    t.type === 'expense' && t.payMethod === 'credit' && t.creditId === cc.id &&
+    t.date >= startStr && t.date <= endStr
+  ).reduce((s, t) => s + t.amount, 0);
+  // Add fixed expenses in cycle not yet covered by a tx
+  const fixedTotal = S.fixed.filter(fe => {
+    if (fe.payMethod !== 'credit' || fe.creditId !== cc.id) return false;
+    const inPrevStr = localDateStr(new Date(start.getFullYear(), start.getMonth(), fe.day));
+    const inCurrStr = localDateStr(new Date(end.getFullYear(),   end.getMonth(),   fe.day));
+    const fDateStr  = (inPrevStr >= startStr && inPrevStr <= endStr) ? inPrevStr
+                    : (inCurrStr >= startStr && inCurrStr <= endStr) ? inCurrStr : null;
+    if (!fDateStr) return false;
+    const fMonth = parseInt(fDateStr.slice(5,7)) - 1;
+    const fYear  = parseInt(fDateStr.slice(0,4));
+    if (S.declinedFixed.some(x => x.fixedId === fe.id && x.month === fMonth && x.year === fYear)) return false;
+    return !S.txs.some(t => t.fixedId === fe.id && t.date >= startStr && t.date <= endStr);
+  }).reduce((s, fe) => s + fe.amount, 0);
+  return txTotal + fixedTotal;
+}
 // Format a local Date as YYYY-MM-DD for timezone-safe string comparison
 function localDateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -1225,7 +1270,7 @@ function bankStatus(bank) {
   });
   S.credits.forEach(cc => {
     if (cc.bankId === bank.id && cc.chargeDate >= todayDay && cc.chargeDate <= in5)
-      upcoming += creditSpent(cc.id, today.getMonth(), today.getFullYear());
+      upcoming += ccCycleTotalNow(cc);
   });
   const rem = bank.balance - upcoming;
   if (rem >= 2500) return { cls: 's-green', dot: '#2ecc71', upcoming, rem };
@@ -1285,7 +1330,7 @@ function renderTopbarBalance() {
   });
   S.credits.forEach(cc => {
     if (cc.chargeDate >= todayDay && cc.chargeDate <= in5)
-      upcoming += creditSpent(cc.id, today.getMonth(), today.getFullYear());
+      upcoming += ccCycleTotalNow(cc);
   });
   const surplus = total - upcoming;
   let color;
