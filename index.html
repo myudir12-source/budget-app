@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he" dir="rtl" id="html-root">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -19,7 +19,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsxjs.min.js"></script>
 
 <style>
 :root {
@@ -536,11 +537,11 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <div class="balance-amount" id="dash-balance">₪ 0</div>
       <div class="balance-sub" id="dash-month-lbl">טוען...</div>
       <div class="balance-row">
-        <div class="balance-item"><div class="balance-item-lbl">הכנסות</div><div class="balance-item-val c-green" id="dash-income">₪ 0</div></div>
-        <div class="balance-item"><div class="balance-item-lbl">הוצאות</div><div class="balance-item-val c-red" id="dash-expense">₪ 0</div></div>
+        <div class="balance-item"><div class="balance-item-lbl" data-i18n="lbl_income">הכנסות</div><div class="balance-item-val c-green" id="dash-income">₪ 0</div></div>
+        <div class="balance-item"><div class="balance-item-lbl" data-i18n="lbl_expense">הוצאות</div><div class="balance-item-val c-red" id="dash-expense">₪ 0</div></div>
       </div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:13px;color:var(--text2)">נשאר החודש</div>
+        <div style="font-size:13px;color:var(--text2)" data-i18n="lbl_remaining">נשאר החודש</div>
         <div style="font-size:18px;font-weight:700" id="dash-remaining">₪ 0</div>
       </div>
       <div id="dash-savings-goal" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"></div>
@@ -733,6 +734,14 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
     </div>
 
     <div class="settings-section">
+      <div class="settings-title" data-i18n="settings_lang_title">שפת האפליקציה</div>
+      <div style="display:flex;gap:8px">
+        <button id="lang-btn-he" onclick="setLang('he')" class="type-btn t-income" style="flex:1;padding:11px;font-size:14px">🇮🇱 עברית</button>
+        <button id="lang-btn-en" onclick="setLang('en')" class="type-btn" style="flex:1;padding:11px;font-size:14px">🇺🇸 English</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-item" onclick="showFeedbackModal()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(78,205,196,0.15)">💬</div>
@@ -763,19 +772,19 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
   <!-- Bottom Nav -->
   <div class="bottom-nav">
     <div class="nav-item active" id="nav-dashboard" onclick="navTo('dashboard')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>דשבורד
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span data-i18n="nav_dashboard">דשבורד</span>
     </div>
     <div class="nav-item" id="nav-transactions" onclick="navTo('transactions')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>פעולות
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><span data-i18n="nav_transactions">פעולות</span>
     </div>
     <div class="nav-item" id="nav-projects" onclick="navTo('projects')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>פרויקטים
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span data-i18n="nav_projects">פרויקטים</span>
     </div>
     <div class="nav-item" id="nav-analytics" onclick="navTo('analytics')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>ניתוח
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span data-i18n="nav_analytics">ניתוח</span>
     </div>
     <div class="nav-item" id="nav-settings" onclick="navTo('settings')">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>הגדרות
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span data-i18n="nav_settings">הגדרות</span>
     </div>
   </div>
 
@@ -878,6 +887,7 @@ let S = {
   declinedFixed: [],   // [{ fixedId, month, year }] – declined per billing cycle
   projects: [],
   savingsGoal: 0,
+  lang: 'he',          // 'he' | 'en'
 };
 
 // ═══════════════════════════════════════════════
@@ -963,6 +973,9 @@ async function fbLoad(uid) {
       if (d.declinedFixed) S.declinedFixed = d.declinedFixed;
       if (d.projects) S.projects = d.projects;
       if (d.savingsGoal !== undefined) S.savingsGoal = d.savingsGoal;
+      if (d.lang) S.lang = d.lang;
+      // Remove duplicate UID entries (keep מנהל over חבר, first entry wins otherwise)
+      S.members = dedupMembers(S.members);
 
       // Identify current user by their Firebase uid inside the members array
       let myMember = S.members.find(m => m.uid === uid);
@@ -1046,6 +1059,8 @@ async function fbJoinWorkspace(uid, wsId) {
       if (d.declinedFixed) S.declinedFixed = d.declinedFixed;
       if (d.projects) S.projects = d.projects;
       if (d.savingsGoal !== undefined) S.savingsGoal = d.savingsGoal;
+      if (d.lang) S.lang = d.lang;
+      S.members = dedupMembers(S.members);
     }
     // Check if already in members by uid
     let joinedMember = S.members.find(m => m.uid === uid);
@@ -1084,12 +1099,14 @@ function fbSave() {
     if (mi >= 0) S.members[mi] = { ...S.members[mi], ...entry };
     else S.members.push(entry);
   }
+  // Deduplicate before persisting (prevents duplicate-uid accumulation)
+  S.members = dedupMembers(S.members);
   fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').set({
     banks: S.banks, credits: S.credits, fixed: S.fixed,
     fixedIncome: S.fixedIncome, txs: S.txs, cats: S.cats, icats: S.icats,
     members: S.members, notifDays: S.notifDays, dailyTime: S.dailyTime,
     monthStartDay: S.monthStartDay, declinedFixed: S.declinedFixed,
-    projects: S.projects, savingsGoal: S.savingsGoal,
+    projects: S.projects, savingsGoal: S.savingsGoal, lang: S.lang,
     savedAt: new Date().toISOString(),
   }).catch(e => console.error('save error', e));
 }
@@ -1187,6 +1204,7 @@ function enterApp() {
   render();
   renderTopbarBalance();
   renderSettings();
+  applyLang();
   checkUpcomingNotif();
   trackEvent('login');
   checkWeeklySummary();
@@ -1755,6 +1773,12 @@ function renderSettings() {
   const sdt = document.getElementById('s-daily-time'); if (sdt) sdt.textContent = S.dailyTime;
   const scd = document.getElementById('s-cycle-day');
   if (scd) scd.textContent = (S.monthStartDay || 1) === 1 ? '1 (חודש קלנדרי)' : `${S.monthStartDay} לחודש`;
+  // Highlight active language button
+  const bHe = document.getElementById('lang-btn-he'), bEn = document.getElementById('lang-btn-en');
+  if (bHe && bEn) {
+    bHe.className = 'type-btn' + (S.lang !== 'en' ? ' t-income' : '');
+    bEn.className = 'type-btn' + (S.lang === 'en' ? ' t-income' : '');
+  }
   const ssg = document.getElementById('s-savings-goal');
   if (ssg) ssg.textContent = S.savingsGoal > 0 ? fmtAmt(S.savingsGoal) + ' לחודש' : 'לא מוגדר';
   const sproj = document.getElementById('s-projects');
@@ -3135,6 +3159,8 @@ async function fbLoadAfterTerms(uid) {
       if (d.notifDays!==undefined) S.notifDays=d.notifDays; if (d.dailyTime) S.dailyTime=d.dailyTime;
       if (d.monthStartDay!==undefined) S.monthStartDay=d.monthStartDay; if (d.declinedFixed) S.declinedFixed=d.declinedFixed;
       if (d.projects) S.projects=d.projects; if (d.savingsGoal!==undefined) S.savingsGoal=d.savingsGoal;
+      if (d.lang) S.lang=d.lang;
+      S.members = dedupMembers(S.members);
       const myMember = S.members.find(m=>m.uid===uid);
       if (myMember) { S.user={...myMember,email:S.fbUser?.email||''}; enterApp(); return; }
     }
@@ -3310,6 +3336,230 @@ async function showAdminDashboard() {
       <button class="btn-secondary" onclick="closeModal()">סגור</button>
     `);
   } catch(e) { toast('❌ שגיאה בטעינת נתוני ניהול','warn'); }
+}
+
+// ═══════════════════════════════════════════════
+// MEMBER DEDUPLICATION
+// ═══════════════════════════════════════════════
+function dedupMembers(arr) {
+  // For each uid, keep exactly one entry.
+  // Priority: מנהל role > חבר role > first seen.
+  const byUid = {};
+  const noUid = [];
+  arr.forEach(m => {
+    if (!m.uid) { noUid.push(m); return; }
+    if (!byUid[m.uid]) { byUid[m.uid] = m; return; }
+    // Keep מנהל over חבר
+    if (m.role === 'מנהל' && byUid[m.uid].role !== 'מנהל') byUid[m.uid] = { ...byUid[m.uid], ...m };
+  });
+  return [...noUid, ...Object.values(byUid)];
+}
+
+// ═══════════════════════════════════════════════
+// TRANSLATIONS
+// ═══════════════════════════════════════════════
+const TRANSLATIONS = {
+  he: {
+    nav_dashboard: 'דשבורד', nav_transactions: 'פעולות', nav_projects: 'פרויקטים',
+    nav_analytics: 'ניתוח', nav_settings: 'הגדרות',
+    lbl_income: 'הכנסות', lbl_expense: 'הוצאות', lbl_remaining: 'נשאר החודש',
+    settings_lang_title: 'שפת האפליקציה',
+    btn_add_tx: 'הוסף פעולה', btn_cancel: 'ביטול', btn_save: 'שמור', btn_close: 'סגור',
+    tx_expense: 'הוצאה', tx_income: 'הכנסה', tx_transfer: 'העברה',
+    settings_title: 'הגדרות',
+  },
+  en: {
+    nav_dashboard: 'Dashboard', nav_transactions: 'Transactions', nav_projects: 'Projects',
+    nav_analytics: 'Analytics', nav_settings: 'Settings',
+    lbl_income: 'Income', lbl_expense: 'Expenses', lbl_remaining: 'Remaining',
+    settings_lang_title: 'App Language',
+    btn_add_tx: 'Add Transaction', btn_cancel: 'Cancel', btn_save: 'Save', btn_close: 'Close',
+    tx_expense: 'Expense', tx_income: 'Income', tx_transfer: 'Transfer',
+    settings_title: 'Settings',
+  },
+};
+
+function t(key) {
+  const lang = S.lang || 'he';
+  return (TRANSLATIONS[lang] || TRANSLATIONS.he)[key] || (TRANSLATIONS.he[key] || key);
+}
+
+function applyLang() {
+  const lang = S.lang || 'he';
+  const root = document.getElementById('html-root');
+  if (root) { root.dir = lang === 'en' ? 'ltr' : 'rtl'; root.lang = lang; }
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = (TRANSLATIONS[lang] || TRANSLATIONS.he)[key];
+    if (val !== undefined) el.textContent = val;
+  });
+}
+
+function setLang(lang) {
+  S.lang = lang;
+  applyLang();
+  renderSettings();
+  fbSave();
+  toast(lang === 'en' ? '🌐 Language: English' : '🌐 שפה: עברית', 'success');
+}
+
+// ═══════════════════════════════════════════════
+// REPORT HELPERS
+// ═══════════════════════════════════════════════
+function buildReportHTML(data) {
+  const d = data || _reportData;
+  if (!d) return '';
+  const bal = d.income - d.expense;
+  const catTotals = {};
+  d.txs.filter(t => t.type === 'expense').forEach(t => { catTotals[t.catId] = (catTotals[t.catId]||0) + t.amount; });
+  const catRows = Object.entries(catTotals).sort((a,b) => b[1]-a[1]).map(([cid, amt]) => {
+    const c = catById(parseInt(cid), false);
+    const pct = d.expense > 0 ? Math.round(amt/d.expense*100) : 0;
+    return `<tr>
+      <td style="padding:7px 8px;border-bottom:1px solid #eee">${c.icon} ${c.name}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid #eee;color:#c62828;font-weight:600;text-align:left">₪${amt.toLocaleString()}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid #eee;text-align:left">
+        <div style="background:#eee;border-radius:3px;height:6px;width:80px;display:inline-block;overflow:hidden">
+          <div style="background:#e74c3c;width:${pct}%;height:100%"></div>
+        </div> <span style="font-size:11px;color:#888">${pct}%</span>
+      </td>
+    </tr>`;
+  }).join('');
+  const txRows = [...d.txs].sort((a,b) => a.date.localeCompare(b.date)).map(t => {
+    const isIn = t.type === 'income';
+    const cat = catById(t.catId, isIn);
+    return `<tr style="background:${isIn?'#f0fff4':'#fff0f0'}">
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px">${t.date}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px">${t.name}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:11px">${cat.icon} ${cat.name}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:12px;font-weight:600;color:${isIn?'#2e7d32':'#c62828'};text-align:left">${isIn?'+':'-'}₪${t.amount.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+  return `<div style="font-family:Arial,sans-serif;direction:rtl;text-align:right;width:700px;background:white;color:#1a1a2e">
+    <div style="background:linear-gradient(135deg,#1a1d27,#6c63ff);color:white;padding:28px 30px;border-radius:12px 12px 0 0">
+      <div style="font-size:26px;font-weight:800;margin-bottom:4px">💰 דוח תקציב</div>
+      <div style="font-size:14px;opacity:0.85">${d.fromStr} — ${d.toStr}</div>
+    </div>
+    <div style="padding:24px 30px">
+      <div style="display:flex;gap:14px;margin-bottom:24px">
+        <div style="flex:1;background:#e8f5e9;border-radius:10px;padding:16px 14px;text-align:center;border:1px solid #a5d6a7">
+          <div style="font-size:12px;color:#388e3c;font-weight:600;margin-bottom:6px">הכנסות</div>
+          <div style="font-size:22px;font-weight:800;color:#2e7d32">₪${d.income.toLocaleString()}</div>
+        </div>
+        <div style="flex:1;background:#ffebee;border-radius:10px;padding:16px 14px;text-align:center;border:1px solid #ef9a9a">
+          <div style="font-size:12px;color:#c62828;font-weight:600;margin-bottom:6px">הוצאות</div>
+          <div style="font-size:22px;font-weight:800;color:#c62828">₪${d.expense.toLocaleString()}</div>
+        </div>
+        <div style="flex:1;background:${bal>=0?'#e3f2fd':'#fce4ec'};border-radius:10px;padding:16px 14px;text-align:center;border:1px solid ${bal>=0?'#90caf9':'#f48fb1'}">
+          <div style="font-size:12px;color:${bal>=0?'#1565c0':'#c62828'};font-weight:600;margin-bottom:6px">מאזן</div>
+          <div style="font-size:22px;font-weight:800;color:${bal>=0?'#1565c0':'#c62828'}">${bal>=0?'+':''}₪${bal.toLocaleString()}</div>
+        </div>
+      </div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #6c63ff">הוצאות לפי קטגוריה</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:22px">${catRows||'<tr><td colspan="3" style="padding:10px;color:#999">אין נתונים</td></tr>'}</table>
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #6c63ff">כל הפעולות (${d.txs.length})</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#f5f5f5"><th style="padding:8px;text-align:right;font-size:12px">תאריך</th><th style="padding:8px;text-align:right;font-size:12px">שם</th><th style="padding:8px;text-align:right;font-size:12px">קטגוריה</th><th style="padding:8px;text-align:left;font-size:12px">סכום</th></tr></thead>
+        <tbody>${txRows||'<tr><td colspan="4" style="padding:10px;color:#999">אין פעולות</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div style="background:#f9f9f9;padding:14px 30px;font-size:11px;color:#999;border-top:1px solid #eee">
+      נוצר על ידי תקציב משפחתי • ${new Date().toLocaleDateString('he-IL')}
+    </div>
+  </div>`;
+}
+
+async function downloadReportPDF() {
+  if (!_reportData) { toast('⚠️ הצג דוח תחילה','warn'); return; }
+  const { jsPDF } = window.jspdf || {};
+  if (!jsPDF) { toast('⏳ jsPDF לא נטען','warn'); return; }
+  if (typeof html2canvas === 'undefined') { toast('⏳ html2canvas לא נטען','warn'); return; }
+  toast('⏳ מייצר PDF...','info');
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;top:-9999px;right:-9999px;z-index:-1;';
+  container.innerHTML = buildReportHTML();
+  document.body.appendChild(container);
+  try {
+    const canvas = await html2canvas(container.firstChild, { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' });
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW = pageW - 20;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    const img = canvas.toDataURL('image/png');
+    let y = 10, heightLeft = imgH;
+    pdf.addImage(img, 'PNG', 10, y, imgW, imgH);
+    heightLeft -= pageH - 20;
+    while (heightLeft > 0) {
+      y = -(imgH - heightLeft) - 10;
+      pdf.addPage();
+      pdf.addImage(img, 'PNG', 10, y, imgW, imgH);
+      heightLeft -= pageH - 20;
+    }
+    pdf.save('budget-report-' + _reportData.fromStr + '.pdf');
+    toast('✅ PDF הורד','success');
+  } catch(e) { console.error(e); toast('❌ שגיאה ביצירת PDF','warn'); }
+  finally { document.body.removeChild(container); }
+}
+
+function downloadReportExcel() {
+  if (!_reportData) { toast('⚠️ הצג דוח תחילה','warn'); return; }
+  if (typeof XLSX === 'undefined') { toast('⏳ XLSX לא נטען','warn'); return; }
+  const d = _reportData;
+  const bal = d.income - d.expense;
+  const wb = XLSX.utils.book_new();
+
+  // ── Summary rows ──
+  const summaryAoa = [
+    [{ v: '💰 דוח תקציב', s: { font:{bold:true,sz:16,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1A1D27'}}, alignment:{horizontal:'right'} } }, '', '', ''],
+    [{ v: 'תקופה: ' + d.fromStr + ' — ' + d.toStr, s: { font:{sz:11,color:{rgb:'666666'}}, alignment:{horizontal:'right'} } }, '', '', ''],
+    [''],
+    [
+      { v: 'הכנסות', s: { font:{bold:true,color:{rgb:'2E7D32'}}, fill:{fgColor:{rgb:'E8F5E9'}}, alignment:{horizontal:'center'} } },
+      { v: 'הוצאות', s: { font:{bold:true,color:{rgb:'C62828'}}, fill:{fgColor:{rgb:'FFEBEE'}}, alignment:{horizontal:'center'} } },
+      { v: 'מאזן', s: { font:{bold:true,color:{rgb: bal>=0?'1565C0':'C62828'}}, fill:{fgColor:{rgb: bal>=0?'E3F2FD':'FCE4EC'}}, alignment:{horizontal:'center'} } },
+      '',
+    ],
+    [
+      { v: d.income, t:'n', z:'#,##0', s: { font:{bold:true,sz:13,color:{rgb:'2E7D32'}}, fill:{fgColor:{rgb:'E8F5E9'}}, alignment:{horizontal:'center'} } },
+      { v: d.expense, t:'n', z:'#,##0', s: { font:{bold:true,sz:13,color:{rgb:'C62828'}}, fill:{fgColor:{rgb:'FFEBEE'}}, alignment:{horizontal:'center'} } },
+      { v: bal, t:'n', z:'#,##0', s: { font:{bold:true,sz:13,color:{rgb: bal>=0?'1565C0':'C62828'}}, fill:{fgColor:{rgb: bal>=0?'E3F2FD':'FCE4EC'}}, alignment:{horizontal:'center'} } },
+      '',
+    ],
+    [''],
+    [
+      { v: 'תאריך', s: { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'6C63FF'}}, alignment:{horizontal:'center'} } },
+      { v: 'שם', s: { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'6C63FF'}}, alignment:{horizontal:'right'} } },
+      { v: 'סוג', s: { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'6C63FF'}}, alignment:{horizontal:'center'} } },
+      { v: 'סכום', s: { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'6C63FF'}}, alignment:{horizontal:'center'} } },
+      { v: 'קטגוריה', s: { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'6C63FF'}}, alignment:{horizontal:'right'} } },
+    ],
+    ...[...d.txs].sort((a,b) => a.date.localeCompare(b.date)).map((tx, i) => {
+      const isIn = tx.type === 'income';
+      const cat = catById(tx.catId, isIn);
+      const rowFill = isIn ? 'F0FFF4' : 'FFF0F0';
+      const amtColor = isIn ? '2E7D32' : 'C62828';
+      return [
+        { v: tx.date, s: { fill:{fgColor:{rgb: rowFill}}, alignment:{horizontal:'center'} } },
+        { v: tx.name, s: { fill:{fgColor:{rgb: rowFill}}, alignment:{horizontal:'right'} } },
+        { v: isIn ? 'הכנסה' : 'הוצאה', s: { fill:{fgColor:{rgb: rowFill}}, font:{color:{rgb: amtColor}}, alignment:{horizontal:'center'} } },
+        { v: tx.amount, t:'n', z:'#,##0', s: { fill:{fgColor:{rgb: rowFill}}, font:{bold:true,color:{rgb: amtColor}}, alignment:{horizontal:'center'} } },
+        { v: cat.icon + ' ' + cat.name, s: { fill:{fgColor:{rgb: rowFill}}, alignment:{horizontal:'right'} } },
+      ];
+    }),
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(summaryAoa);
+  // Column widths
+  ws['!cols'] = [{wch:12},{wch:30},{wch:10},{wch:12},{wch:18}];
+  // Merge header across columns
+  ws['!merges'] = [
+    {s:{r:0,c:0}, e:{r:0,c:4}},
+    {s:{r:1,c:0}, e:{r:1,c:4}},
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'דוח');
+  XLSX.writeFile(wb, 'budget-report-' + d.fromStr + '.xlsx');
+  toast('✅ Excel הורד','success');
 }
 
 // ═══════════════════════════════════════════════
