@@ -16,7 +16,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 :root {
@@ -284,6 +287,40 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
 
 /* MISC */
 ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ACCORDION HELP */
+.acc-item { border-bottom: 1px solid var(--border); }
+.acc-hdr { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; cursor: pointer; }
+.acc-hdr-title { font-size: 14px; font-weight: 600; }
+.acc-body { display: none; padding: 0 0 13px; color: var(--text2); font-size: 13px; line-height: 1.7; }
+.acc-body.open { display: block; }
+.acc-arrow { color: var(--text3); font-size: 16px; transition: transform 0.2s; }
+.acc-arrow.open { transform: rotate(90deg); }
+
+/* PROJECTS */
+.proj-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; cursor: pointer; transition: background 0.2s; }
+.proj-card:hover { background: var(--card2); }
+.proj-prog { height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; }
+.proj-prog-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+
+/* SEARCH */
+.search-bar { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--rs); padding: 10px 13px; width: 100%; color: var(--text); font-size: 14px; font-family: 'Heebo', sans-serif; outline: none; margin-bottom: 10px; }
+.search-bar:focus { border-color: var(--accent); }
+
+/* QUICK CHIPS */
+.chip { display: inline-block; padding: 5px 11px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; margin: 3px 2px; transition: all 0.2s; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+
+/* STARS */
+.star { font-size: 28px; cursor: pointer; color: var(--border); transition: color 0.15s; }
+.star.lit { color: #f39c12; }
+
+/* SAVINGS GOAL BAR */
+.goal-bar { height: 5px; background: var(--border); border-radius: 3px; margin-top: 4px; }
+.goal-bar-fill { height: 100%; border-radius: 3px; }
+
+/* TERMS */
+#terms { align-items: center; justify-content: center; padding: 24px; background: var(--bg); }
 </style>
 </head>
 <body>
@@ -451,6 +488,24 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
   </div>
 </div>
 
+<!-- ══ TERMS SCREEN ══ -->
+<div id="terms" class="screen">
+  <div style="max-width:420px;width:100%">
+    <div style="font-size:32px;text-align:center;margin-bottom:10px">📋</div>
+    <div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:16px">תנאי שימוש</div>
+    <div class="auth-box" style="margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text2);line-height:1.8">
+        האפליקציה מיועדת לשימוש אישי לניהול תקציב. המפתח אינו אחראי לנתונים המוזנים, לאובדן מידע, או לכל נזק ישיר או עקיף הנובע משימוש באפליקציה. השימוש באפליקציה מהווה הסכמה לתנאים אלו.
+      </div>
+      <div style="margin-top:16px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="terms-cb" style="width:18px;height:18px;cursor:pointer">
+        <label for="terms-cb" style="font-size:13px;cursor:pointer">קראתי ומסכים/ה לתנאי השימוש</label>
+      </div>
+      <button class="btn-primary" style="margin-top:14px" onclick="acceptTerms()">המשך ←</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ APP ══ -->
 <div id="app">
   <!-- Topbar -->
@@ -488,6 +543,7 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
         <div style="font-size:13px;color:var(--text2)">נשאר החודש</div>
         <div style="font-size:18px;font-weight:700" id="dash-remaining">₪ 0</div>
       </div>
+      <div id="dash-savings-goal" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"></div>
     </div>
     <div class="section-hdr"><div class="section-title">חשבונות בנק</div><div class="section-action" onclick="showAddBankModal()">+ הוסף</div></div>
     <div class="bank-scroll" id="bank-cards"></div>
@@ -510,8 +566,22 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <button class="month-btn" onclick="chMonth(-1)">‹</button>
       <div class="month-label" id="ml-tx">טוען...</div>
       <button class="month-btn" onclick="chMonth(1)">›</button>
+      <div class="month-btn" onclick="toggleSearch()" title="חיפוש" id="search-toggle-btn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </div>
+    </div>
+    <div id="search-bar-wrap" style="display:none">
+      <input class="search-bar" id="tx-search" placeholder="חפש לפי שם או סכום..." oninput="renderAllTxs()">
     </div>
     <div class="card" style="padding:6px 16px" id="all-txs"></div>
+  </div>
+
+  <div class="page" id="pg-projects">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:19px;font-weight:700">פרויקטים וטיולים</div>
+      <div class="section-action" onclick="showAddProjectModal()">+ הוסף</div>
+    </div>
+    <div id="projects-list"></div>
   </div>
 
   <div class="page" id="pg-analytics">
@@ -545,6 +615,7 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <div style="height:100px;margin-bottom:10px"><canvas id="cat-mini-chart"></canvas></div>
       <div id="cat-detail-txs"></div>
     </div>
+    <button class="btn-secondary" style="margin-top:4px" onclick="showReportModal()">📄 הוצא דוח</button>
   </div>
 
   <div class="page" id="pg-settings">
@@ -609,6 +680,12 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
           <div><div class="settings-name">יום התחלת חודש</div><div class="settings-sub" id="s-cycle-day">1 (חודש קלנדרי)</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
+      <div class="settings-item" onclick="showSavingsGoalModal()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(46,204,113,0.15)">🎯</div>
+          <div><div class="settings-name">יעד חיסכון חודשי</div><div class="settings-sub" id="s-savings-goal">לא מוגדר</div></div>
+        </div><div class="settings-arrow">›</div>
+      </div>
     </div>
 
     <div class="settings-section">
@@ -628,6 +705,12 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
     </div>
 
     <div class="settings-section">
+      <div class="settings-title">פרויקטים</div>
+      <div id="s-projects"></div>
+      <button class="btn-add" onclick="showAddProjectModal()">+ הוסף פרויקט</button>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-title">עזרה</div>
       <div class="settings-item" onclick="showHelp()">
         <div class="settings-item-left">
@@ -641,10 +724,39 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
           <div><div class="settings-name">סיור מודרך</div><div class="settings-sub">עבור שוב על הסיור הראשוני</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
+      <div class="settings-item" onclick="showTermsModal()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(108,99,255,0.15)">📋</div>
+          <div><div class="settings-name">תנאי שימוש</div><div class="settings-sub">קרא את תנאי השימוש</div></div>
+        </div><div class="settings-arrow">›</div>
+      </div>
     </div>
 
     <div class="settings-section">
+      <div class="settings-item" onclick="showFeedbackModal()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(78,205,196,0.15)">💬</div>
+          <div><div class="settings-name">שלח משוב</div><div class="settings-sub">עזור לנו לשפר</div></div>
+        </div><div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="exportData()">
+        <div class="settings-item-left">
+          <div class="settings-icon" style="background:rgba(46,204,113,0.15)">📤</div>
+          <div><div class="settings-name">ייצא נתונים</div><div class="settings-sub">הורד גיבוי JSON</div></div>
+        </div><div class="settings-arrow">›</div>
+      </div>
       <button class="btn-danger" onclick="doLogout()">יציאה מהחשבון</button>
+    </div>
+
+    <div class="settings-section" style="margin-top:8px;padding-top:4px;border-top:1px solid var(--border)">
+      <div style="text-align:center;padding:16px;color:var(--text2);font-size:12px">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">אודות האפליקציה</div>
+        <div>פותח ע״י יהודה רוטשטיין</div>
+        <div style="margin-top:6px"><a href="mailto:myudir12@gmail.com" style="color:var(--accent)">myudir12@gmail.com</a></div>
+        <div style="margin-top:3px"><a href="tel:0548204480" style="color:var(--accent)">054-8204480</a></div>
+        <a href="https://wa.me/message/5KLQZGQYUIQZM1" target="_blank" style="display:inline-block;margin-top:10px;padding:8px 16px;background:#25D366;color:white;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none">💬 וואטסאפ</a>
+        <div style="margin-top:8px;font-size:11px;color:var(--text3)">לשאלות, הצעות ושיפורים - אשמח לשמוע!</div>
+      </div>
     </div>
   </div>
 
@@ -655,6 +767,9 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
     </div>
     <div class="nav-item" id="nav-transactions" onclick="navTo('transactions')">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>פעולות
+    </div>
+    <div class="nav-item" id="nav-projects" onclick="navTo('projects')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>פרויקטים
     </div>
     <div class="nav-item" id="nav-analytics" onclick="navTo('analytics')">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>ניתוח
@@ -684,10 +799,41 @@ firebase.initializeApp({
   projectId: "family-budget-4c168",
   storageBucket: "family-budget-4c168.firebasestorage.app",
   messagingSenderId: "141767275617",
-  appId: "1:141767275617:web:a8db5e6d99ae24b0186620"
+  appId: "1:141767275617:web:a8db5e6d99ae24b0186620",
+  measurementId: "G-PLACEHOLDER"
 });
 const fbAuth = firebase.auth();
 const fbDb   = firebase.firestore();
+let fbAnalytics = null;
+try { fbAnalytics = firebase.analytics(); } catch(e) {}
+function trackEvent(name, params) { try { if(fbAnalytics) fbAnalytics.logEvent(name, params||{}); } catch(e) {} }
+
+/*
+ * FIRESTORE SECURITY RULES (deploy to Firebase Console → Firestore → Rules)
+ *
+ * rules_version = '2';
+ * service cloud.firestore {
+ *   match /databases/{database}/documents {
+ *     // Users can only access their own userMeta
+ *     match /userMeta/{userId} {
+ *       allow read, write: if request.auth != null && request.auth.uid == userId;
+ *     }
+ *     // Workspace access: member of the workspace or owner
+ *     match /workspaces/{workspaceId}/{document=**} {
+ *       allow read, write: if request.auth != null && (
+ *         request.auth.uid == workspaceId ||
+ *         exists(/databases/$(database)/documents/userMeta/$(request.auth.uid)) &&
+ *         get(/databases/$(database)/documents/userMeta/$(request.auth.uid)).data.workspaceId == workspaceId
+ *       );
+ *     }
+ *     // Feedback: authenticated users can write only
+ *     match /feedback/{doc} {
+ *       allow create: if request.auth != null;
+ *       allow read: if false;
+ *     }
+ *   }
+ * }
+ */
 
 // ═══════════════════════════════════════════════
 // STATE
@@ -730,6 +876,8 @@ let S = {
   approvalMode: 'all',
   monthStartDay: 1,
   declinedFixed: [],   // [{ fixedId, month, year }] – declined per billing cycle
+  projects: [],
+  savingsGoal: 0,
 };
 
 // ═══════════════════════════════════════════════
@@ -740,6 +888,14 @@ async function fbLoad(uid) {
     // Check if user already has a workspace (always fetch first to avoid overwriting)
     const userMeta = await fbDb.collection('userMeta').doc(uid).get();
     const existingWorkspaceId = userMeta.exists ? userMeta.data().workspaceId : null;
+
+    // Terms check: only show for existing users who haven't accepted yet
+    // New users (no userMeta) will go through onboarding, which is fine
+    if (userMeta.exists && existingWorkspaceId && !userMeta.data().termsAccepted) {
+      S.pendingTermsUid = uid;
+      showScreen('terms');
+      return;
+    }
 
     // Check if there's an invite link (workspace join)
     const urlParams = new URLSearchParams(window.location.search);
@@ -805,6 +961,8 @@ async function fbLoad(uid) {
       if (d.dailyTime)   S.dailyTime   = d.dailyTime;
       if (d.monthStartDay !== undefined) S.monthStartDay = d.monthStartDay;
       if (d.declinedFixed) S.declinedFixed = d.declinedFixed;
+      if (d.projects) S.projects = d.projects;
+      if (d.savingsGoal !== undefined) S.savingsGoal = d.savingsGoal;
 
       // Identify current user by their Firebase uid inside the members array
       let myMember = S.members.find(m => m.uid === uid);
@@ -886,6 +1044,8 @@ async function fbJoinWorkspace(uid, wsId) {
       if (d.dailyTime)   S.dailyTime   = d.dailyTime;
       if (d.monthStartDay !== undefined) S.monthStartDay = d.monthStartDay;
       if (d.declinedFixed) S.declinedFixed = d.declinedFixed;
+      if (d.projects) S.projects = d.projects;
+      if (d.savingsGoal !== undefined) S.savingsGoal = d.savingsGoal;
     }
     // Check if already in members by uid
     let joinedMember = S.members.find(m => m.uid === uid);
@@ -929,6 +1089,7 @@ function fbSave() {
     fixedIncome: S.fixedIncome, txs: S.txs, cats: S.cats, icats: S.icats,
     members: S.members, notifDays: S.notifDays, dailyTime: S.dailyTime,
     monthStartDay: S.monthStartDay, declinedFixed: S.declinedFixed,
+    projects: S.projects, savingsGoal: S.savingsGoal,
     savedAt: new Date().toISOString(),
   }).catch(e => console.error('save error', e));
 }
@@ -1027,6 +1188,12 @@ function enterApp() {
   renderTopbarBalance();
   renderSettings();
   checkUpcomingNotif();
+  trackEvent('login');
+  checkWeeklySummary();
+  // Admin check
+  if (new URLSearchParams(window.location.search).get('admin') === '1' && S.fbUser?.uid === 'PXvbCSxEsAWqoaYKSOPeYr9LAGE2') {
+    setTimeout(showAdminDashboard, 1000);
+  }
 }
 
 function autoCreateFixedTxs() {
@@ -1127,11 +1294,14 @@ let currentPage = 'dashboard';
 function navTo(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('pg-' + page).classList.add('active');
-  document.getElementById('nav-' + page).classList.add('active');
+  const pgEl = document.getElementById('pg-' + page);
+  if (pgEl) pgEl.classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
   currentPage = page;
   if (page === 'analytics') { renderAnalytics(); }
   if (page === 'transactions') { renderAllTxs(); }
+  if (page === 'projects') { renderProjects(); }
 }
 
 // ═══════════════════════════════════════════════
@@ -1390,6 +1560,24 @@ function renderBalance() {
     re.style.color = surplusColor(remaining);
   }
 
+  // Savings goal
+  const sgEl = document.getElementById('dash-savings-goal');
+  if (sgEl) {
+    const saved = cycleIncome - cycleExpense;
+    if (S.savingsGoal > 0) {
+      const pct = Math.min(100, Math.max(0, Math.round(saved / S.savingsGoal * 100)));
+      const barColor = saved >= S.savingsGoal ? 'var(--green)' : 'var(--red)';
+      sgEl.style.display = 'block';
+      sgEl.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div style="font-size:12px;color:var(--text2)">חסכת ${fmtAmt(saved)} מתוך ${fmtAmt(S.savingsGoal)} יעד</div>
+        <div style="font-size:12px;font-weight:700;color:${barColor}">${pct}%</div>
+      </div>
+      <div class="goal-bar"><div class="goal-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>`;
+    } else {
+      sgEl.style.display = 'none';
+    }
+  }
+
   // Update subtitle to show cycle range when not a standard calendar month
   const lbl = document.getElementById('dash-month-lbl');
   if (lbl) {
@@ -1480,7 +1668,27 @@ function renderTxList(txs, containerId) {
 }
 
 function renderRecentTxs() { renderTxList([...monthTxs()].reverse().slice(0,8), 'recent-txs'); }
-function renderAllTxs()    { renderTxList([...monthTxs()].reverse(), 'all-txs'); }
+function renderAllTxs() {
+  const q = (document.getElementById('tx-search')?.value || '').trim().toLowerCase();
+  let txs = [...monthTxs()].reverse();
+  if (q) {
+    txs = txs.filter(t => t.name.toLowerCase().includes(q) || String(t.amount).includes(q));
+  }
+  renderTxList(txs, 'all-txs');
+}
+let _searchVisible = false;
+function toggleSearch() {
+  _searchVisible = !_searchVisible;
+  const wrap = document.getElementById('search-bar-wrap');
+  if (wrap) wrap.style.display = _searchVisible ? 'block' : 'none';
+  if (!_searchVisible) {
+    const inp = document.getElementById('tx-search');
+    if (inp) inp.value = '';
+    renderAllTxs();
+  } else {
+    setTimeout(()=>document.getElementById('tx-search')?.focus(), 100);
+  }
+}
 
 function renderSettings() {
   if (S.user) {
@@ -1547,6 +1755,14 @@ function renderSettings() {
   const sdt = document.getElementById('s-daily-time'); if (sdt) sdt.textContent = S.dailyTime;
   const scd = document.getElementById('s-cycle-day');
   if (scd) scd.textContent = (S.monthStartDay || 1) === 1 ? '1 (חודש קלנדרי)' : `${S.monthStartDay} לחודש`;
+  const ssg = document.getElementById('s-savings-goal');
+  if (ssg) ssg.textContent = S.savingsGoal > 0 ? fmtAmt(S.savingsGoal) + ' לחודש' : 'לא מוגדר';
+  const sproj = document.getElementById('s-projects');
+  if (sproj) sproj.innerHTML = S.projects.map(p => `<div class="settings-item">
+    <div class="settings-item-left"><div class="settings-icon" style="background:rgba(108,99,255,0.15)">${p.icon||'📁'}</div>
+    <div><div class="settings-name">${p.name}</div><div class="settings-sub">${fmtAmt(p.budget)} • ${p.startDate||''}</div></div></div>
+    <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editProjectModal('${p.id}')">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delProject('${p.id}')">מחק</span></div>
+  </div>`).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין פרויקטים</div>';
 }
 
 // ═══════════════════════════════════════════════
@@ -1772,9 +1988,11 @@ function showAddTxModal() {
       <label for="tx-recurring" style="font-size:13px;cursor:pointer" id="tx-recurring-lbl">הפוך להוצאה קבועה חוזרת</label>
     </div>
     <div class="fg" id="tx-rec-day-g" style="display:none"><label class="fl">יום בחודש</label><input class="fi" id="tx-rec-day" type="number" min="1" max="31" placeholder="1" inputmode="numeric"></div>
+    <div id="tx-quick-section"></div>
     <button class="btn-primary" onclick="submitTx()">הוסף פעולה</button>
     <button class="btn-secondary" onclick="closeModal()">ביטול</button>
   `);
+  renderQuickSection();
 }
 
 function setTxType(t) {
@@ -1823,7 +2041,24 @@ function submitTx() {
     const from=S.banks.find(b=>b.id===tx.fromBankId); if(from) from.balance-=amt;
     const to  =S.banks.find(b=>b.id===tx.toBankId);   if(to)   to.balance+=amt;
   }
+  // Project assignment
+  const projSel = document.getElementById('tx-project-sel');
+  if (projSel && projSel.value) tx.projectId = projSel.value;
+
   S.txs.push(tx);
+
+  // Budget alert: compare this month vs last month for same category
+  if (txType === 'expense' && tx.catId) {
+    const curM = new Date(tx.date).getMonth(), curY = new Date(tx.date).getFullYear();
+    const lastM = curM === 0 ? 11 : curM - 1;
+    const lastY = curM === 0 ? curY - 1 : curY;
+    const thisMonthTotal = S.txs.filter(t => t.type==='expense' && t.catId===tx.catId && new Date(t.date).getMonth()===curM && new Date(t.date).getFullYear()===curY).reduce((s,t)=>s+t.amount,0);
+    const lastMonthTotal = S.txs.filter(t => t.type==='expense' && t.catId===tx.catId && new Date(t.date).getMonth()===lastM && new Date(t.date).getFullYear()===lastY).reduce((s,t)=>s+t.amount,0);
+    if (lastMonthTotal > 0 && thisMonthTotal > lastMonthTotal * 1.2) {
+      const catName = catById(tx.catId, false).name;
+      setTimeout(()=>toast(`⚠️ הוצאת יותר מהרגיל על ${catName} החודש`,'warn'), 500);
+    }
+  }
 
   // Handle recurring
   const isRecurring = document.getElementById('tx-recurring')?.checked;
@@ -1843,6 +2078,7 @@ function submitTx() {
   }
 
   closeModal(); render(); fbSave();
+  trackEvent('add_transaction', { type: txType });
 }
 
 // ═══════════════════════════════════════════════
@@ -2450,23 +2686,31 @@ function showInviteModal() {
   const wsId = S.workspaceId || S.fbUser?.uid;
   const appUrl = window.location.origin + window.location.pathname;
   const inviteUrl = appUrl + '?ws=' + wsId;
-  const waText  = encodeURIComponent('הצטרף לסביבת התקציב המשפחתי שלי: ' + inviteUrl);
+  const waInvite  = encodeURIComponent('הצטרף לסביבת התקציב המשפחתי שלי: ' + inviteUrl);
   const mailSub = encodeURIComponent('הזמנה לסביבת עבודה – תקציב משפחתי');
   const mailBody= encodeURIComponent('היי,\nהצטרף לסביבת התקציב המשפחתי שלי:\n' + inviteUrl);
+  const waApp   = encodeURIComponent('אפליקציית ניהול תקציב משפחתי: ' + appUrl);
+  const mailSub2= encodeURIComponent('אפליקציית תקציב משפחתי');
+  const mailBody2= encodeURIComponent('היי,\nאפליקציית ניהול תקציב משפחתי:\n' + appUrl);
   openModal(`
     <div class="modal-hdr"><div class="modal-title">הזמן לסביבת עבודה</div><div class="modal-close" onclick="closeModal()">×</div></div>
     <p style="color:var(--text2);font-size:13px;margin-bottom:10px">שתף את הקישור עם בן/בת הזוג – מי שייכנס דרכו יצורף לסביבת העבודה שלך:</p>
-    <div style="background:var(--bg3);border-radius:var(--rs);padding:11px;font-size:11px;color:var(--accent);word-break:break-all;cursor:pointer;margin-bottom:12px" onclick="copyInvite('${inviteUrl}')">${inviteUrl}</div>
-    <button class="btn-primary" onclick="copyInvite('${inviteUrl}')">📋 העתק קישור הזמנה</button>
-    <a href="https://wa.me/?text=${waText}" target="_blank" rel="noopener"
-       style="display:block;text-align:center;padding:13px;background:#25D366;color:white;border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:15px;font-weight:600;text-decoration:none;margin-top:8px">💬 שלח בוואטסאפ</a>
-    <a href="mailto:?subject=${mailSub}&body=${mailBody}"
-       style="display:block;text-align:center;padding:13px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:15px;font-weight:600;text-decoration:none;margin-top:8px">✉️ שלח במייל</a>
-    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
-      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">שיתוף קישור האפליקציה בלבד (ללא הצטרפות לסביבה):</div>
-      <button class="btn-secondary" style="margin-top:0" onclick="copyInvite('${appUrl}')">📱 העתק קישור אפליקציה</button>
+    <div style="background:var(--bg3);border-radius:var(--rs);padding:11px;font-size:11px;color:var(--accent);word-break:break-all;cursor:pointer;margin-bottom:10px" onclick="copyInvite('${inviteUrl}')">${inviteUrl}</div>
+    <div style="display:flex;gap:8px;margin-bottom:4px">
+      <a href="https://wa.me/?text=${waInvite}" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:11px;background:#25D366;color:white;border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:13px;font-weight:600;text-decoration:none">💬 וואטסאפ</a>
+      <a href="mailto:?subject=${mailSub}&body=${mailBody}" style="flex:1;text-align:center;padding:11px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:13px;font-weight:600;text-decoration:none">✉️ מייל</a>
+      <button onclick="copyInvite('${inviteUrl}')" style="flex:1;padding:11px;background:var(--accent);color:white;border:none;border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:13px;font-weight:600;cursor:pointer">📋 העתק</button>
     </div>
-    <button class="btn-secondary" onclick="closeModal()">סגור</button>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">שיתוף קישור האפליקציה בלבד (ללא הצטרפות לסביבה):</div>
+      <div style="background:var(--bg3);border-radius:var(--rs);padding:9px;font-size:11px;color:var(--accent2);word-break:break-all;margin-bottom:8px">${appUrl}</div>
+      <div style="display:flex;gap:8px">
+        <a href="https://wa.me/?text=${waApp}" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:10px;background:#25D366;color:white;border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:12px;font-weight:600;text-decoration:none">💬 וואטסאפ</a>
+        <a href="mailto:?subject=${mailSub2}&body=${mailBody2}" style="flex:1;text-align:center;padding:10px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:12px;font-weight:600;text-decoration:none">✉️ מייל</a>
+        <button onclick="copyInvite('${appUrl}')" style="flex:1;padding:10px;background:var(--accent);color:white;border:none;border-radius:var(--rs);font-family:'Heebo',sans-serif;font-size:12px;font-weight:600;cursor:pointer">📋 העתק</button>
+      </div>
+    </div>
+    <button class="btn-secondary" style="margin-top:10px" onclick="closeModal()">סגור</button>
   `);
 }
 function copyInvite(url) { navigator.clipboard?.writeText(url); toast('📋 קישור הועתק','success'); }
@@ -2512,25 +2756,38 @@ function saveCycleDay() {
 // HELP
 // ═══════════════════════════════════════════════
 function showHelp() {
+  const sections = [
+    ['🏦','איך מוסיפים חשבון בנק','הגדרות ← חשבונות בנק ← + הוסף חשבון בנק.<br>מלא שם, יתרה נוכחית וצבע.<br>לחץ שמור – הבנק יופיע בדשבורד.<br><br>💡 <strong>טיפ:</strong> גם מזומן יכול להיות "חשבון" – קרא לו "מזומן" והכנס כמה יש לך.'],
+    ['💳','איך עובד כרטיס אשראי','כל כרטיס אשראי מוגדר עם תאריך חיוב (יום בחודש) ובנק שממנו יורד.<br>מחזור החיוב: מיום לאחר תאריך החיוב בחודש הקודם עד תאריך החיוב בחודש הנוכחי.<br>בדשבורד תראה תמיד כמה צברת על כל כרטיס במחזור הנוכחי.'],
+    ['➕','הוספת פעולה','לחץ על כפתור + (עיגול בתחתית המסך).<br>בחר סוג: הוצאה / הכנסה / העברה.<br>מלא: תיאור, סכום, תאריך, קטגוריה, אמצעי תשלום.<br><br>✅ <strong>פעולה חוזרת:</strong> סמן "הפוך להוצאה קבועה" כדי שתיווצר אוטומטית בכל חודש.'],
+    ['📌','הוצאות קבועות','הגדרות ← הוצאות קבועות ← + הוסף.<br>הוצאות קבועות נוצרות אוטומטית בכל חודש ביום שהגדרת.<br>בתחילת החודש תתבקש לאשר או לדחות כל חיוב.<br>דחייה מונעת את יצירת הפעולה לחודש הנוכחי בלבד.'],
+    ['🚦','צבעי חשבון בנק','כל חשבון מקבל צבע שמראה מצב יתרה ביחס לחיובים הקרובים (5 ימים):<br>🟢 <strong>ירוק</strong> – יש יותר מ-₪2,500 מעל החיובים<br>🟡 <strong>צהוב</strong> – פחות מ-₪2,500<br>🟠 <strong>כתום</strong> – פחות מ-₪500<br>🔴 <strong>אדום</strong> – מינוס / אין מספיק'],
+    ['👥','סביבת עבודה משותפת','הגדרות ← פרופיל ← הזמן בן/בת זוג.<br>שלח את קישור ההזמנה לבן/בת הזוג.<br>מי שייכנס דרך הקישור יצורף לסביבת העבודה שלך.<br>כל הנתונים, הפעולות וההגדרות משותפות בזמן אמת.'],
+    ['📁','פרויקטים וטיולים','לחץ על "פרויקטים" בתפריט התחתון.<br>הוסף פרויקט עם שם, תקציב ותאריכים.<br>בעת הוספת פעולה, שייך אותה לפרויקט.<br>בדף הפרויקט ראה כמה הוצאת מתוך התקציב + גרף התקדמות.<br>לחץ "הוצא דוח" לקבלת PDF.'],
+    ['📊','ניתוח וגרפים','לחץ על "ניתוח" בתפריט.<br>הגרף מציג הוצאות/הכנסות לפי חודש לאורך השנה.<br>לחץ על עמודה לפרטי החודש.<br>לחץ על קטגוריה לראות גרף חודשי ורשימת פעולות.<br>לחץ "הוצא דוח" לייצוא PDF/Excel.'],
+    ['🔔','התראות','הגדרות ← התראות:<br>• <strong>התראת חיוב:</strong> קבל התראה X ימים לפני כל חיוב קבוע<br>• <strong>תזכורת יומית:</strong> "האם הוצאת משהו היום?" בשעה שתבחר<br>• <strong>סיכום שבועי:</strong> מוצג אוטומטית כל יום ראשון עם סיכום השבוע'],
+    ['💡','טיפים כלליים','• הכנס פעולות בזמן אמת כדי לא לשכוח<br>• השתמש בקטגוריות לניתוח מדויק<br>• הגדר הוצאות קבועות לחיסכון בזמן<br>• בדוק את הדשבורד לפחות פעם בשבוע<br>• ייצא נתונים מדי פעם כגיבוי (הגדרות ← ייצא נתונים)'],
+  ];
+  const html = sections.map(([icon,title,body],i)=>`
+    <div class="acc-item">
+      <div class="acc-hdr" onclick="toggleAcc(${i})">
+        <div class="acc-hdr-title">${icon} ${title}</div>
+        <span class="acc-arrow" id="acc-arr-${i}">›</span>
+      </div>
+      <div class="acc-body" id="acc-body-${i}">${body}</div>
+    </div>`).join('');
   openModal(`
     <div class="modal-hdr"><div class="modal-title">❓ מדריך עזרה</div><div class="modal-close" onclick="closeModal()">×</div></div>
-    <div style="display:flex;flex-direction:column;gap:9px">
-      ${[['🏦','הוסף חשבון בנק','הגדרות ← חשבונות בנק ← + הוסף. שם, יתרה, צבע.'],
-         ['💳','הוסף כרטיס אשראי','הגדרות ← כרטיסי אשראי ← + הוסף. תאריך חיוב ובנק.'],
-         ['➕','הוספת פעולה','כפתור + (עיגול סגול). בחר הוצאה/הכנסה/העברה.'],
-         ['✏️','עריכת פעולה','לחץ על כל פעולה ברשימה כדי לערוך או למחוק.'],
-         ['📌','הוצאות קבועות','הגדרות ← הוצאות קבועות. יחויבו אוטומטית כל חודש.'],
-         ['📊','ניתוח נתונים','לחץ על כרטיס קטגוריה לגרף חודשי ורשימת פעולות.'],
-         ['🚦','צבעי חשבון','ירוק=בסדר, צהוב=שים לב, כתום=מעט, אדום=מינוס.'],
-         ['👥','הזמן בן/בת זוג','הגדרות ← פרופיל ← הזמן. שלח קישור.'],
-      ].map(([icon,title,desc])=>`
-        <div style="background:var(--bg3);border-radius:var(--rs);padding:11px;display:flex;gap:9px;align-items:flex-start">
-          <span style="font-size:19px;flex-shrink:0">${icon}</span>
-          <div><div style="font-size:13px;font-weight:600;margin-bottom:2px">${title}</div><div style="font-size:11px;color:var(--text2)">${desc}</div></div>
-        </div>`).join('')}
-      <button class="btn-primary" style="margin-top:4px" onclick="closeModal();showTutorial()">🎓 סיור מודרך מחדש</button>
-    </div>
+    <div>${html}</div>
+    <button class="btn-primary" style="margin-top:14px" onclick="closeModal();showTutorial()">🎓 סיור מודרך מחדש</button>
   `);
+}
+function toggleAcc(i) {
+  const body = document.getElementById('acc-body-'+i);
+  const arr  = document.getElementById('acc-arr-'+i);
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (arr) arr.classList.toggle('open', open);
 }
 
 // ═══════════════════════════════════════════════
@@ -2558,6 +2815,501 @@ function checkUpcomingNotif() {
       setTimeout(()=>{ if(b.parentElement) b.remove(); }, 8000);
     }, 2000);
   }
+}
+
+// ═══════════════════════════════════════════════
+// WEEKLY SUMMARY
+// ═══════════════════════════════════════════════
+function checkWeeklySummary() {
+  const today = new Date();
+  if (today.getDay() !== 0) return; // Sunday only
+  const yw = today.getFullYear() + '-W' + getWeekNumber(today);
+  const key = 'weeklySummaryShown_' + yw;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, '1');
+  const sevenAgo = new Date(today); sevenAgo.setDate(sevenAgo.getDate() - 7);
+  const weekTxs = S.txs.filter(t => { const d = new Date(t.date); return t.type==='expense' && d >= sevenAgo && d <= today; });
+  const total = weekTxs.reduce((s,t)=>s+t.amount,0);
+  if (!total) return;
+  const catTotals = {};
+  weekTxs.forEach(t => { catTotals[t.catId]=(catTotals[t.catId]||0)+t.amount; });
+  const top3 = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([cid,amt])=>{
+    const c = catById(parseInt(cid),false);
+    return `${c.name} ${fmtAmt(amt)}`;
+  });
+  setTimeout(()=>{
+    const b = document.createElement('div');
+    b.className = 'notif-banner';
+    b.style.borderColor = 'var(--accent2)';
+    b.innerHTML = `<div class="notif-text">📊 סיכום שבועי: הוצאת ${fmtAmt(total)} השבוע | ${top3.join(' • ')}</div><div class="notif-x" onclick="this.parentElement.remove()">×</div>`;
+    document.getElementById('notifs').appendChild(b);
+    setTimeout(()=>{ if(b.parentElement) b.remove(); }, 10000);
+  }, 3000);
+}
+function getWeekNumber(d) {
+  const date = new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dayNum = date.getUTCDay()||7;
+  date.setUTCDate(date.getUTCDate()+4-dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date-yearStart)/86400000)+1)/7);
+}
+
+// ═══════════════════════════════════════════════
+// SAVINGS GOAL
+// ═══════════════════════════════════════════════
+function showSavingsGoalModal() {
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">🎯 יעד חיסכון חודשי</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:14px">הגדר יעד חיסכון חודשי. הוא יוצג בדשבורד עם פס התקדמות.</p>
+    <div class="fg"><label class="fl">יעד חיסכון (₪)</label><input class="fi" id="sg-val" type="number" min="0" placeholder="0" value="${S.savingsGoal||0}" inputmode="decimal"></div>
+    <button class="btn-primary" onclick="saveSavingsGoal()">שמור</button>
+    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+  `);
+}
+function saveSavingsGoal() {
+  S.savingsGoal = parseFloat(document.getElementById('sg-val').value)||0;
+  closeModal(); renderSettings(); render(); fbSave();
+  toast('✅ יעד חיסכון עודכן','success');
+}
+
+// ═══════════════════════════════════════════════
+// PROJECTS
+// ═══════════════════════════════════════════════
+function renderProjects() {
+  const c = document.getElementById('projects-list');
+  if (!c) return;
+  if (!S.projects.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">📁</div><div class="empty-text">אין פרויקטים עדיין. הוסף את הראשון!</div></div>';
+    return;
+  }
+  c.innerHTML = S.projects.map(p => {
+    const spent = S.txs.filter(t=>t.projectId===p.id && t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const pct = p.budget > 0 ? Math.min(100, Math.round(spent/p.budget*100)) : 0;
+    const barColor = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--orange)' : 'var(--green)';
+    return `<div class="proj-card" onclick="showProjectDetail('${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:16px;font-weight:700">${p.icon||'📁'} ${p.name}</div>
+        <div style="font-size:13px;color:var(--red);font-weight:700">${fmtAmt(spent)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">מתוך ${fmtAmt(p.budget)} תקציב${p.endDate?' • עד '+p.endDate:''}</div>
+      <div class="proj-prog"><div class="proj-prog-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <div style="font-size:11px;color:${barColor};margin-top:4px;text-align:left">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function showAddProjectModal() {
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">פרויקט חדש</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div class="fg"><label class="fl">שם הפרויקט</label><input class="fi" id="np-name" placeholder="חופשה, שיפוץ..."></div>
+    <div class="fg"><label class="fl">אייקון (אמוג'י)</label><input class="fi" id="np-icon" placeholder="🏖️" maxlength="4" style="font-size:22px;text-align:center"></div>
+    <div class="fg"><label class="fl">תקציב (₪)</label><input class="fi" id="np-budget" type="number" placeholder="0" inputmode="decimal"></div>
+    <div class="fg"><label class="fl">תאריך התחלה</label><input class="fi" id="np-start" type="date"></div>
+    <div class="fg"><label class="fl">תאריך סיום</label><input class="fi" id="np-end" type="date"></div>
+    <button class="btn-primary" onclick="submitAddProject()">הוסף</button>
+    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+  `);
+}
+function submitAddProject() {
+  const name = document.getElementById('np-name').value.trim();
+  if (!name) { toast('⚠️ נא להזין שם','warn'); return; }
+  const proj = {
+    id: 'p' + Date.now(),
+    name,
+    icon: document.getElementById('np-icon').value || '📁',
+    budget: parseFloat(document.getElementById('np-budget').value)||0,
+    startDate: document.getElementById('np-start').value,
+    endDate: document.getElementById('np-end').value,
+  };
+  S.projects.push(proj);
+  closeModal(); renderProjects(); renderSettings(); fbSave();
+  toast('✅ פרויקט נוסף','success');
+}
+function editProjectModal(id) {
+  const p = S.projects.find(x=>x.id===id); if (!p) return;
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">עריכת ${p.name}</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div class="fg"><label class="fl">שם</label><input class="fi" id="ep-name" value="${p.name}"></div>
+    <div class="fg"><label class="fl">אייקון</label><input class="fi" id="ep-icon" value="${p.icon||'📁'}" maxlength="4" style="font-size:22px;text-align:center"></div>
+    <div class="fg"><label class="fl">תקציב (₪)</label><input class="fi" id="ep-budget" type="number" value="${p.budget}" inputmode="decimal"></div>
+    <div class="fg"><label class="fl">תאריך התחלה</label><input class="fi" id="ep-start" type="date" value="${p.startDate||''}"></div>
+    <div class="fg"><label class="fl">תאריך סיום</label><input class="fi" id="ep-end" type="date" value="${p.endDate||''}"></div>
+    <button class="btn-primary" onclick="saveEditProject('${id}')">שמור</button>
+    <button class="btn-danger" onclick="delProject('${id}')">מחק</button>
+    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+  `);
+}
+function saveEditProject(id) {
+  const p = S.projects.find(x=>x.id===id); if (!p) return;
+  p.name = document.getElementById('ep-name').value;
+  p.icon = document.getElementById('ep-icon').value || '📁';
+  p.budget = parseFloat(document.getElementById('ep-budget').value)||0;
+  p.startDate = document.getElementById('ep-start').value;
+  p.endDate = document.getElementById('ep-end').value;
+  closeModal(); renderProjects(); renderSettings(); fbSave(); toast('✅ עודכן','success');
+}
+function delProject(id) {
+  if (!confirm('למחוק פרויקט?')) return;
+  S.projects = S.projects.filter(p=>p.id!==id);
+  closeModal(); renderProjects(); renderSettings(); fbSave();
+}
+function showProjectDetail(id) {
+  const p = S.projects.find(x=>x.id===id); if (!p) return;
+  const txs = S.txs.filter(t=>t.projectId===id && t.type==='expense');
+  const spent = txs.reduce((s,t)=>s+t.amount,0);
+  const pct = p.budget > 0 ? Math.min(100, Math.round(spent/p.budget*100)) : 0;
+  const barColor = pct>=100?'var(--red)':pct>=80?'var(--orange)':'var(--green)';
+  const txHtml = txs.length ? [...txs].reverse().map(t=>{
+    const cat=catById(t.catId,false); const d=new Date(t.date);
+    return `<div class="tx-item" onclick="editTxModal(${t.id})">
+      <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="tx-info"><div class="tx-name">${t.name}</div><div class="tx-detail">${d.getDate()}/${d.getMonth()+1}</div></div>
+      <div class="tx-amount neg">- ${fmtAmt(t.amount)}</div>
+    </div>`;
+  }).join('') : '<div class="empty"><div class="empty-text">אין פעולות בפרויקט זה</div></div>';
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">${p.icon||'📁'} ${p.name}</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">הוצאות</div>
+        <div style="font-size:20px;font-weight:700;color:var(--red)">${fmtAmt(spent)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">תקציב</div>
+        <div style="font-size:20px;font-weight:700">${fmtAmt(p.budget)}</div>
+      </div>
+      <div style="flex:1;background:var(--bg3);border-radius:var(--rs);padding:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">נותר</div>
+        <div style="font-size:20px;font-weight:700;color:${barColor}">${fmtAmt(p.budget-spent)}</div>
+      </div>
+    </div>
+    <div class="proj-prog" style="height:8px;margin-bottom:12px"><div class="proj-prog-fill" style="width:${pct}%;background:${barColor}"></div></div>
+    <div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">פעולות בפרויקט</div>
+    ${txHtml}
+    <button class="btn-secondary" style="margin-top:10px" onclick="exportProjectPDF('${id}')">📄 הוצא דוח PDF</button>
+    <button class="btn-secondary" onclick="closeModal();editProjectModal('${id}')">✏️ ערוך פרויקט</button>
+  `);
+}
+function exportProjectPDF(id) {
+  const p = S.projects.find(x=>x.id===id); if (!p) return;
+  if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+    toast('⏳ טוען PDF...','info'); return;
+  }
+  const { jsPDF } = window.jspdf || window;
+  const doc = new jsPDF();
+  const txs = S.txs.filter(t=>t.projectId===id && t.type==='expense');
+  const spent = txs.reduce((s,t)=>s+t.amount,0);
+  doc.setFontSize(18);
+  doc.text('Project Report: ' + p.name, 14, 20);
+  doc.setFontSize(12);
+  doc.text('Budget: ' + p.budget + ' | Spent: ' + spent + ' | Remaining: ' + (p.budget-spent), 14, 32);
+  doc.text('Date: ' + new Date().toLocaleDateString(), 14, 40);
+  let y = 52;
+  doc.setFontSize(11);
+  doc.text('Date', 14, y); doc.text('Name', 50, y); doc.text('Amount', 150, y);
+  y += 6;
+  txs.forEach(t => {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.text(t.date, 14, y);
+    doc.text(t.name.substring(0,30), 50, y);
+    doc.text(String(t.amount), 150, y);
+    y += 7;
+  });
+  doc.save('project-' + p.name + '.pdf');
+}
+
+// ═══════════════════════════════════════════════
+// QUICK ADD CHIPS
+// ═══════════════════════════════════════════════
+function renderQuickSection() {
+  const el = document.getElementById('tx-quick-section');
+  if (!el) return;
+  const lastExpenses = [...new Map(
+    [...S.txs].filter(t=>t.type==='expense').reverse().map(t=>[t.name,t])
+  ).values()].slice(0,5);
+  const activeProjects = S.projects;
+  let html = '';
+  if (lastExpenses.length) {
+    html += `<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--text2);margin-bottom:5px">הוצאות אחרונות:</div><div>`;
+    html += lastExpenses.map(t=>`<span class="chip" onclick="prefillExpense('${t.name.replace(/'/g,"\\'")}',${t.amount})">${t.name}</span>`).join('');
+    html += '</div></div>';
+  }
+  if (activeProjects.length) {
+    html += `<div class="fg"><label class="fl">שייך לפרויקט (אופציונלי)</label>
+      <select class="fs" id="tx-project-sel">
+        <option value="">ללא פרויקט</option>
+        ${activeProjects.map(p=>`<option value="${p.id}">${p.icon||'📁'} ${p.name}</option>`).join('')}
+      </select></div>`;
+  }
+  el.innerHTML = html;
+}
+function prefillExpense(name, amt) {
+  const ni = document.getElementById('tx-name');
+  const ai = document.getElementById('tx-amt');
+  if (ni) ni.value = name;
+  if (ai) ai.value = amt;
+}
+
+// ═══════════════════════════════════════════════
+// FEEDBACK
+// ═══════════════════════════════════════════════
+let _feedbackRating = 0;
+function showFeedbackModal() {
+  _feedbackRating = 0;
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">💬 שלח משוב</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">כמה כוכבים מגיע לאפליקציה?</div>
+      <div id="star-row">${[1,2,3,4,5].map(i=>`<span class="star" id="star-${i}" onclick="setRating(${i})">★</span>`).join('')}</div>
+    </div>
+    <div class="fg"><label class="fl">הערות ורעיונות</label>
+      <textarea class="fi" id="fb-comment" rows="4" placeholder="ספר לנו מה אפשר לשפר..." style="resize:vertical"></textarea></div>
+    <button class="btn-primary" onclick="submitFeedback()">שלח משוב</button>
+    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+  `);
+}
+function setRating(n) {
+  _feedbackRating = n;
+  for (let i=1;i<=5;i++) {
+    const s = document.getElementById('star-'+i);
+    if (s) s.classList.toggle('lit', i<=n);
+  }
+}
+async function submitFeedback() {
+  if (!_feedbackRating) { toast('⚠️ נא לבחור דירוג','warn'); return; }
+  const comment = document.getElementById('fb-comment').value;
+  try {
+    await fbDb.collection('feedback').add({
+      userId: S.fbUser?.uid || 'demo',
+      rating: _feedbackRating,
+      comment,
+      timestamp: new Date().toISOString(),
+      appVersion: '1.0',
+    });
+    closeModal(); toast('✅ תודה על המשוב!','success');
+  } catch(e) { toast('❌ שגיאה בשמירה','warn'); }
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT DATA
+// ═══════════════════════════════════════════════
+function exportData() {
+  const data = { banks: S.banks, credits: S.credits, fixed: S.fixed, fixedIncome: S.fixedIncome, txs: S.txs, cats: S.cats, icats: S.icats, projects: S.projects, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'budget-export-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+  toast('📤 הנתונים יורדים...','success');
+}
+
+// ═══════════════════════════════════════════════
+// TERMS OF USE
+// ═══════════════════════════════════════════════
+async function acceptTerms() {
+  if (!document.getElementById('terms-cb').checked) {
+    toast('⚠️ נא לסמן שקראת ומסכים לתנאים','warn'); return;
+  }
+  const uid = S.pendingTermsUid;
+  if (uid) {
+    await fbDb.collection('userMeta').doc(uid).set({ termsAccepted: true }, { merge: true }).catch(()=>{});
+    S.pendingTermsUid = null;
+    // Continue normal workspace load without terms check (already accepted)
+    fbLoadAfterTerms(uid);
+  }
+}
+async function fbLoadAfterTerms(uid) {
+  try {
+    const userMeta = await fbDb.collection('userMeta').doc(uid).get();
+    const existingWorkspaceId = userMeta.exists ? userMeta.data().workspaceId : null;
+    if (existingWorkspaceId) {
+      S.workspaceId = existingWorkspaceId;
+    } else {
+      S.workspaceId = uid;
+      await fbDb.collection('userMeta').doc(uid).set({ workspaceId: uid, createdAt: new Date().toISOString() }, { merge: true });
+    }
+    const snap = await fbDb.collection('workspaces').doc(S.workspaceId).collection('data').doc('main').get();
+    if (snap.exists) {
+      const d = snap.data();
+      if (d.banks) S.banks=d.banks; if (d.credits) S.credits=d.credits; if (d.fixed) S.fixed=d.fixed;
+      if (d.txs) S.txs=d.txs; if (d.cats) S.cats=d.cats; if (d.icats) S.icats=d.icats;
+      if (d.fixedIncome) S.fixedIncome=d.fixedIncome; if (d.members) S.members=d.members;
+      if (d.notifDays!==undefined) S.notifDays=d.notifDays; if (d.dailyTime) S.dailyTime=d.dailyTime;
+      if (d.monthStartDay!==undefined) S.monthStartDay=d.monthStartDay; if (d.declinedFixed) S.declinedFixed=d.declinedFixed;
+      if (d.projects) S.projects=d.projects; if (d.savingsGoal!==undefined) S.savingsGoal=d.savingsGoal;
+      const myMember = S.members.find(m=>m.uid===uid);
+      if (myMember) { S.user={...myMember,email:S.fbUser?.email||''}; enterApp(); return; }
+    }
+    showScreen('onboarding');
+  } catch(e) { showScreen('onboarding'); }
+}
+function showTermsModal() {
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">📋 תנאי שימוש</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div style="background:var(--bg3);border-radius:var(--rs);padding:16px;font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px">
+      האפליקציה מיועדת לשימוש אישי לניהול תקציב. המפתח אינו אחראי לנתונים המוזנים, לאובדן מידע, או לכל נזק ישיר או עקיף הנובע משימוש באפליקציה. השימוש באפליקציה מהווה הסכמה לתנאים אלו.
+    </div>
+    <button class="btn-secondary" onclick="closeModal()">סגור</button>
+  `);
+}
+
+// ═══════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════
+function showReportModal() {
+  const today = new Date();
+  const ym = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+  const lastM = today.getMonth()===0?12:today.getMonth();
+  const lastY = today.getMonth()===0?today.getFullYear()-1:today.getFullYear();
+  const lastYm = lastY + '-' + String(lastM).padStart(2,'0');
+  const projOptions = S.projects.map(p=>`<option value="proj_${p.id}">${p.icon||'📁'} ${p.name}</option>`).join('');
+  openModal(`
+    <div class="modal-hdr"><div class="modal-title">📄 הוצא דוח</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div class="fg"><label class="fl">טווח תאריכים</label>
+      <select class="fs" id="rep-range" onchange="repRangeChange()">
+        <option value="this_month">החודש הנוכחי (${MONTHS[today.getMonth()]})</option>
+        <option value="last_month">החודש הקודם (${MONTHS[lastM-1]})</option>
+        <option value="3months">3 חודשים אחרונים</option>
+        <option value="this_year">השנה הנוכחית (${today.getFullYear()})</option>
+        <option value="last_year">השנה הקודמת (${today.getFullYear()-1})</option>
+        ${projOptions}
+        <option value="custom">מותאם אישית</option>
+      </select>
+    </div>
+    <div id="rep-custom" style="display:none">
+      <div class="fg"><label class="fl">מתאריך</label><input class="fi" id="rep-from" type="date"></div>
+      <div class="fg"><label class="fl">עד תאריך</label><input class="fi" id="rep-to" type="date" value="${today.toISOString().split('T')[0]}"></div>
+    </div>
+    <button class="btn-primary" onclick="generateReport()">הצג דוח</button>
+    <div id="rep-summary" style="display:none;margin-top:14px"></div>
+    <div id="rep-actions" style="display:none;margin-top:10px;display:none">
+      <button class="btn-secondary" onclick="downloadReportPDF()" style="margin-top:0">📄 הורד PDF</button>
+      <button class="btn-secondary" onclick="downloadReportExcel()">📊 הורד Excel</button>
+    </div>
+    <button class="btn-secondary" style="margin-top:8px" onclick="closeModal()">סגור</button>
+  `);
+}
+function repRangeChange() {
+  const v = document.getElementById('rep-range').value;
+  document.getElementById('rep-custom').style.display = v==='custom'?'block':'none';
+}
+let _reportData = null;
+function generateReport() {
+  const range = document.getElementById('rep-range').value;
+  const today = new Date();
+  let from, to;
+  if (range === 'this_month') {
+    from = new Date(today.getFullYear(), today.getMonth(), 1);
+    to = new Date(today.getFullYear(), today.getMonth()+1, 0);
+  } else if (range === 'last_month') {
+    from = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    to = new Date(today.getFullYear(), today.getMonth(), 0);
+  } else if (range === '3months') {
+    from = new Date(today.getFullYear(), today.getMonth()-3, 1);
+    to = today;
+  } else if (range === 'this_year') {
+    from = new Date(today.getFullYear(), 0, 1);
+    to = new Date(today.getFullYear(), 11, 31);
+  } else if (range === 'last_year') {
+    from = new Date(today.getFullYear()-1, 0, 1);
+    to = new Date(today.getFullYear()-1, 11, 31);
+  } else if (range.startsWith('proj_')) {
+    const projId = range.slice(5);
+    const p = S.projects.find(x=>x.id===projId);
+    const txs = S.txs.filter(t=>t.projectId===projId);
+    if (txs.length) {
+      const dates = txs.map(t=>t.date).sort();
+      from = new Date(dates[0]); to = new Date(dates[dates.length-1]);
+    } else { from = new Date(today.getFullYear(),0,1); to = today; }
+  } else {
+    from = new Date(document.getElementById('rep-from').value);
+    to = new Date(document.getElementById('rep-to').value);
+  }
+  const fromStr = localDateStr(from), toStr = localDateStr(to);
+  const txs = S.txs.filter(t=>t.date>=fromStr && t.date<=toStr);
+  const income = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const catTotals = {};
+  txs.filter(t=>t.type==='expense').forEach(t=>{ catTotals[t.catId]=(catTotals[t.catId]||0)+t.amount; });
+  const catRows = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).map(([cid,amt])=>{
+    const c=catById(parseInt(cid),false);
+    return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span>${c.icon} ${c.name}</span><span style="color:var(--red)">${fmtAmt(amt)}</span></div>`;
+  }).join('');
+  _reportData = { fromStr, toStr, txs, income, expense };
+  const sumEl = document.getElementById('rep-summary');
+  sumEl.style.display = 'block';
+  sumEl.innerHTML = `
+    <div style="background:var(--bg3);border-radius:var(--rs);padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>הכנסות</span><span style="color:var(--green);font-weight:700">${fmtAmt(income)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>הוצאות</span><span style="color:var(--red);font-weight:700">${fmtAmt(expense)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid var(--border)"><span style="font-weight:600">מאזן</span><span style="color:${income-expense>=0?'var(--green)':'var(--red)'};font-weight:700">${fmtAmt(income-expense)}</span></div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">לפי קטגוריה</div>
+    ${catRows||'<div style="color:var(--text3);font-size:12px">אין נתונים</div>'}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-secondary" style="margin-top:0" onclick="downloadReportPDF()">📄 PDF</button>
+      <button class="btn-secondary" style="margin-top:0" onclick="downloadReportExcel()">📊 Excel</button>
+    </div>`;
+}
+function downloadReportPDF() {
+  if (!_reportData) return;
+  const { jsPDF } = window.jspdf || window;
+  if (!jsPDF) { toast('⏳ טוען jsPDF...','info'); return; }
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text('Budget Report', 14, 20);
+  doc.setFontSize(11);
+  doc.text(_reportData.fromStr + ' to ' + _reportData.toStr, 14, 30);
+  doc.text('Income: ' + _reportData.income, 14, 40);
+  doc.text('Expense: ' + _reportData.expense, 14, 48);
+  doc.text('Balance: ' + (_reportData.income - _reportData.expense), 14, 56);
+  let y = 68;
+  doc.text('Date', 14, y); doc.text('Name', 50, y); doc.text('Type', 120, y); doc.text('Amount', 160, y); y+=6;
+  _reportData.txs.forEach(t => {
+    if (y>270){doc.addPage();y=20;}
+    doc.text(t.date,14,y); doc.text(t.name.substring(0,28),50,y);
+    doc.text(t.type==='income'?'Income':'Expense',120,y);
+    doc.text(String(t.amount),160,y); y+=7;
+  });
+  doc.save('budget-report.pdf');
+}
+function downloadReportExcel() {
+  if (!_reportData || typeof XLSX === 'undefined') { toast('⏳ טוען XLSX...','info'); return; }
+  const rows = _reportData.txs.map(t => ({
+    תאריך: t.date, שם: t.name, סוג: t.type==='income'?'הכנסה':'הוצאה',
+    סכום: t.amount, קטגוריה: catById(t.catId, t.type==='income').name
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'דוח');
+  XLSX.writeFile(wb, 'budget-report.xlsx');
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN DASHBOARD
+// ═══════════════════════════════════════════════
+async function showAdminDashboard() {
+  if (S.fbUser?.uid !== 'PXvbCSxEsAWqoaYKSOPeYr9LAGE2') return;
+  try {
+    const wsSnap = await fbDb.collection('workspaces').get();
+    const feedSnap = await fbDb.collection('feedback').get();
+    const feedHtml = feedSnap.docs.map(d=>{
+      const fb=d.data();
+      return `<div style="background:var(--bg3);border-radius:var(--rs);padding:10px;margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between"><span style="color:#f39c12">${'★'.repeat(fb.rating)+'☆'.repeat(5-fb.rating)}</span><span style="font-size:11px;color:var(--text3)">${fb.timestamp?.slice(0,10)||''}</span></div>
+        <div style="font-size:12px;margin-top:4px">${fb.comment||'(ללא הערות)'}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">UID: ${fb.userId||'?'}</div>
+      </div>`;
+    }).join('') || '<div style="color:var(--text3);font-size:12px">אין משובים עדיין</div>';
+    openModal(`
+      <div class="modal-hdr"><div class="modal-title">🔧 לוח ניהול</div><div class="modal-close" onclick="closeModal()">×</div></div>
+      <div style="background:var(--bg3);border-radius:var(--rs);padding:14px;margin-bottom:14px;display:flex;gap:16px">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:700">${wsSnap.size}</div><div style="font-size:11px;color:var(--text2)">סביבות עבודה</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:700">${feedSnap.size}</div><div style="font-size:11px;color:var(--text2)">משובים</div></div>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">משובים אחרונים</div>
+      ${feedHtml}
+      <button class="btn-secondary" onclick="closeModal()">סגור</button>
+    `);
+  } catch(e) { toast('❌ שגיאה בטעינת נתוני ניהול','warn'); }
 }
 
 // ═══════════════════════════════════════════════
