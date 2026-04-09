@@ -533,7 +533,7 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <button class="month-btn" onclick="chMonth(1)">›</button>
     </div>
     <div class="balance-card">
-      <div class="balance-lbl">מאזן חודשי</div>
+      <div class="balance-lbl" data-i18n="lbl_monthly_balance">מאזן חודשי</div>
       <div class="balance-amount" id="dash-balance">₪ 0</div>
       <div class="balance-sub" id="dash-month-lbl">טוען...</div>
       <div class="balance-row">
@@ -546,18 +546,18 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       </div>
       <div id="dash-savings-goal" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)"></div>
     </div>
-    <div class="section-hdr"><div class="section-title">חשבונות בנק</div><div class="section-action" onclick="showAddBankModal()">+ הוסף</div></div>
+    <div class="section-hdr"><div class="section-title" data-i18n="sec_banks">חשבונות בנק</div><div class="section-action" onclick="showAddBankModal()" data-i18n="btn_add">+ הוסף</div></div>
     <div class="bank-scroll" id="bank-cards"></div>
     <div style="margin-top:16px">
-      <div class="section-hdr"><div class="section-title">כרטיסי אשראי</div><div class="section-action" onclick="showAddCreditModal()">+ הוסף</div></div>
+      <div class="section-hdr"><div class="section-title" data-i18n="sec_credits">כרטיסי אשראי</div><div class="section-action" onclick="showAddCreditModal()" data-i18n="btn_add">+ הוסף</div></div>
       <div class="card" style="padding:6px 16px" id="cc-list"></div>
     </div>
     <div style="margin-top:16px">
-      <div class="section-hdr"><div class="section-title">חיובים קרובים</div><div class="section-action" onclick="navTo('transactions')">הכל</div></div>
+      <div class="section-hdr"><div class="section-title" data-i18n="sec_upcoming">חיובים קרובים</div><div class="section-action" onclick="navTo('transactions')" data-i18n="btn_all">הכל</div></div>
       <div class="card" style="padding:6px 16px" id="upcoming-list"></div>
     </div>
     <div style="margin-top:16px">
-      <div class="section-hdr"><div class="section-title">פעולות אחרונות</div><div class="section-action" onclick="navTo('transactions')">הכל</div></div>
+      <div class="section-hdr"><div class="section-title" data-i18n="sec_recent">פעולות אחרונות</div><div class="section-action" onclick="navTo('transactions')" data-i18n="btn_all">הכל</div></div>
       <div class="card" style="padding:6px 16px" id="recent-txs"></div>
     </div>
   </div>
@@ -572,15 +572,15 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       </div>
     </div>
     <div id="search-bar-wrap" style="display:none">
-      <input class="search-bar" id="tx-search" placeholder="חפש לפי שם או סכום..." oninput="renderAllTxs()">
+      <input class="search-bar" id="tx-search" data-i18n-placeholder="search_placeholder" placeholder="חפש לפי שם או סכום..." oninput="renderAllTxs()">
     </div>
     <div class="card" style="padding:6px 16px" id="all-txs"></div>
   </div>
 
   <div class="page" id="pg-projects">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:19px;font-weight:700">פרויקטים וטיולים</div>
-      <div class="section-action" onclick="showAddProjectModal()">+ הוסף</div>
+      <div style="font-size:19px;font-weight:700" data-i18n="projects_title">פרויקטים וטיולים</div>
+      <div class="section-action" onclick="showAddProjectModal()" data-i18n="btn_add_project">+ הוסף</div>
     </div>
     <div id="projects-list"></div>
   </div>
@@ -592,9 +592,9 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <button class="month-btn" onclick="chMonth(1)">›</button>
     </div>
     <div class="an-tabs">
-      <button class="an-tab active" id="ant-expense" onclick="setAnTab('expense')">הוצאות</button>
-      <button class="an-tab" id="ant-income" onclick="setAnTab('income')">הכנסות</button>
-      <button class="an-tab" id="ant-compare" onclick="setAnTab('compare')">השוואה</button>
+      <button class="an-tab active" id="ant-expense" onclick="setAnTab('expense')" data-i18n="ant_expense">הוצאות</button>
+      <button class="an-tab" id="ant-income" onclick="setAnTab('income')" data-i18n="ant_income">הכנסות</button>
+      <button class="an-tab" id="ant-compare" onclick="setAnTab('compare')" data-i18n="ant_compare">השוואה</button>
     </div>
     <div class="card">
       <div class="card-title" id="an-chart-title">הוצאות לפי חודש</div>
@@ -616,119 +616,119 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <div style="height:100px;margin-bottom:10px"><canvas id="cat-mini-chart"></canvas></div>
       <div id="cat-detail-txs"></div>
     </div>
-    <button class="btn-secondary" style="margin-top:4px" onclick="showReportModal()">📄 הוצא דוח</button>
+    <button class="btn-secondary" style="margin-top:4px" onclick="showReportModal()" data-i18n="btn_report">📄 הוצא דוח</button>
   </div>
 
   <div class="page" id="pg-settings">
-    <div style="font-size:19px;font-weight:700;margin-bottom:18px">הגדרות</div>
+    <div style="font-size:19px;font-weight:700;margin-bottom:18px" data-i18n="settings_title">הגדרות</div>
 
     <div class="settings-section">
-      <div class="settings-title">פרופיל וסביבת עבודה</div>
+      <div class="settings-title" data-i18n="settings_profile">פרופיל וסביבת עבודה</div>
       <div class="card" style="margin-bottom:0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:11px">
             <div class="avatar" style="width:44px;height:44px;font-size:17px" id="s-avatar">י</div>
-            <div><div style="font-weight:600;font-size:14px" id="s-username">משתמש</div><div style="font-size:11px;color:var(--text2)">מנהל</div></div>
+            <div><div style="font-weight:600;font-size:14px" id="s-username">משתמש</div><div style="font-size:11px;color:var(--text2)" id="s-user-role">מנהל</div></div>
           </div>
-          <span style="font-size:12px;color:var(--accent);cursor:pointer" onclick="showEditUsername()">שנה שם</span>
+          <span style="font-size:12px;color:var(--accent);cursor:pointer" onclick="showEditUsername()" data-i18n="btn_change_name">שנה שם</span>
         </div>
         <div class="members-row" id="s-members"></div>
-        <button class="btn-add" style="margin-top:10px" onclick="showInviteModal()">+ הזמן בן/בת זוג</button>
+        <button class="btn-add" style="margin-top:10px" onclick="showInviteModal()" data-i18n="btn_invite">+ הזמן בן/בת זוג</button>
       </div>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">חשבונות בנק</div>
+      <div class="settings-title" data-i18n="settings_banks">חשבונות בנק</div>
       <div id="s-banks"></div>
-      <button class="btn-add" onclick="showAddBankModal()">+ הוסף חשבון בנק</button>
+      <button class="btn-add" onclick="showAddBankModal()" data-i18n="btn_add_bank">+ הוסף חשבון בנק</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">כרטיסי אשראי</div>
+      <div class="settings-title" data-i18n="settings_credits">כרטיסי אשראי</div>
       <div id="s-credits"></div>
-      <button class="btn-add" onclick="showAddCreditModal()">+ הוסף כרטיס</button>
+      <button class="btn-add" onclick="showAddCreditModal()" data-i18n="btn_add_credit">+ הוסף כרטיס</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">הוצאות קבועות</div>
+      <div class="settings-title" data-i18n="settings_fixed_expense">הוצאות קבועות</div>
       <div id="s-fixed"></div>
-      <button class="btn-add" onclick="showAddFixedModal(false)">+ הוסף הוצאה קבועה</button>
+      <button class="btn-add" onclick="showAddFixedModal(false)" data-i18n="btn_add_fixed">+ הוסף הוצאה קבועה</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">הכנסות קבועות</div>
+      <div class="settings-title" data-i18n="settings_fixed_income">הכנסות קבועות</div>
       <div id="s-fixed-income"></div>
-      <button class="btn-add" onclick="showAddFixedModal(true)">+ הוסף הכנסה קבועה</button>
+      <button class="btn-add" onclick="showAddFixedModal(true)" data-i18n="btn_add_fixed_income">+ הוסף הכנסה קבועה</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">קטגוריות הוצאות</div>
+      <div class="settings-title" data-i18n="settings_cats_expense">קטגוריות הוצאות</div>
       <div id="s-cats"></div>
-      <button class="btn-add" onclick="showAddCatModal(false)">+ הוסף קטגוריה</button>
+      <button class="btn-add" onclick="showAddCatModal(false)" data-i18n="btn_add_cat">+ הוסף קטגוריה</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">קטגוריות הכנסות</div>
+      <div class="settings-title" data-i18n="settings_cats_income">קטגוריות הכנסות</div>
       <div id="s-icats"></div>
-      <button class="btn-add" onclick="showAddCatModal(true)">+ הוסף קטגוריה</button>
+      <button class="btn-add" onclick="showAddCatModal(true)" data-i18n="btn_add_cat">+ הוסף קטגוריה</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">מחזור חיוב</div>
+      <div class="settings-title" data-i18n="settings_billing">מחזור חיוב</div>
       <div class="settings-item" onclick="showCycleSettings()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(78,205,196,0.15)">📅</div>
-          <div><div class="settings-name">יום התחלת חודש</div><div class="settings-sub" id="s-cycle-day">1 (חודש קלנדרי)</div></div>
+          <div><div class="settings-name" data-i18n="s_billing_day">יום התחלת חודש</div><div class="settings-sub" id="s-cycle-day">1 (חודש קלנדרי)</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
       <div class="settings-item" onclick="showSavingsGoalModal()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(46,204,113,0.15)">🎯</div>
-          <div><div class="settings-name">יעד חיסכון חודשי</div><div class="settings-sub" id="s-savings-goal">לא מוגדר</div></div>
+          <div><div class="settings-name" data-i18n="s_savings_goal">יעד חיסכון חודשי</div><div class="settings-sub" id="s-savings-goal">לא מוגדר</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">התראות</div>
+      <div class="settings-title" data-i18n="settings_notifications">התראות</div>
       <div class="settings-item" onclick="showNotifSettings()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(108,99,255,0.15)">🔔</div>
-          <div><div class="settings-name">התראות חיוב</div><div class="settings-sub" id="s-notif-days">3 ימים לפני חיוב</div></div>
+          <div><div class="settings-name" data-i18n="s_notif_charge">התראות חיוב</div><div class="settings-sub" id="s-notif-days">3 ימים לפני חיוב</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
       <div class="settings-item" onclick="showDailyNotif()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(78,205,196,0.15)">🌙</div>
-          <div><div class="settings-name">תזכורת יומית</div><div class="settings-sub" id="s-daily-time">21:00</div></div>
+          <div><div class="settings-name" data-i18n="s_notif_daily">תזכורת יומית</div><div class="settings-sub" id="s-daily-time">21:00</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">פרויקטים</div>
+      <div class="settings-title" data-i18n="settings_projects">פרויקטים</div>
       <div id="s-projects"></div>
-      <button class="btn-add" onclick="showAddProjectModal()">+ הוסף פרויקט</button>
+      <button class="btn-add" onclick="showAddProjectModal()" data-i18n="btn_add_project_s">+ הוסף פרויקט</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-title">עזרה</div>
+      <div class="settings-title" data-i18n="settings_help">עזרה</div>
       <div class="settings-item" onclick="showHelp()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(78,205,196,0.15)">❓</div>
-          <div><div class="settings-name">מדריך עזרה</div><div class="settings-sub">הסבר מפורט על כל הפיצ'רים</div></div>
+          <div><div class="settings-name" data-i18n="s_help_guide">מדריך עזרה</div><div class="settings-sub" data-i18n="s_help_guide_sub">הסבר מפורט על כל הפיצ'רים</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
       <div class="settings-item" onclick="showTutorial()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(108,99,255,0.15)">🎓</div>
-          <div><div class="settings-name">סיור מודרך</div><div class="settings-sub">עבור שוב על הסיור הראשוני</div></div>
+          <div><div class="settings-name" data-i18n="s_help_tour">סיור מודרך</div><div class="settings-sub" data-i18n="s_help_tour_sub">עבור שוב על הסיור הראשוני</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
       <div class="settings-item" onclick="showTermsModal()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(108,99,255,0.15)">📋</div>
-          <div><div class="settings-name">תנאי שימוש</div><div class="settings-sub">קרא את תנאי השימוש</div></div>
+          <div><div class="settings-name" data-i18n="s_terms">תנאי שימוש</div><div class="settings-sub" data-i18n="s_terms_sub">קרא את תנאי השימוש</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
     </div>
@@ -745,16 +745,10 @@ body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--tex
       <div class="settings-item" onclick="showFeedbackModal()">
         <div class="settings-item-left">
           <div class="settings-icon" style="background:rgba(78,205,196,0.15)">💬</div>
-          <div><div class="settings-name">שלח משוב</div><div class="settings-sub">עזור לנו לשפר</div></div>
+          <div><div class="settings-name" data-i18n="s_feedback">שלח משוב</div><div class="settings-sub" data-i18n="s_feedback_sub">עזור לנו לשפר</div></div>
         </div><div class="settings-arrow">›</div>
       </div>
-      <div class="settings-item" onclick="exportData()">
-        <div class="settings-item-left">
-          <div class="settings-icon" style="background:rgba(46,204,113,0.15)">📤</div>
-          <div><div class="settings-name">ייצא נתונים</div><div class="settings-sub">הורד גיבוי JSON</div></div>
-        </div><div class="settings-arrow">›</div>
-      </div>
-      <button class="btn-danger" onclick="doLogout()">יציאה מהחשבון</button>
+      <button class="btn-danger" id="btn-logout" onclick="doLogout()" data-i18n="btn_logout">יציאה מהחשבון</button>
     </div>
 
     <div class="settings-section" style="margin-top:8px;padding-top:4px;border-top:1px solid var(--border)">
@@ -1163,23 +1157,21 @@ function obSubmit() {
   tutGo(0);
 }
 
-async function doLogout() {
+function doLogout() {
   _loggingOut = true;
-  // Clear workspaceId in Firestore so the next login starts fresh (no auto-connect)
-  if (S.fbUser) {
-    try {
-      await fbDb.collection('userMeta').doc(S.fbUser.uid).set({ workspaceId: null }, { merge: true });
-    } catch(e) { /* ignore */ }
-  }
+  // Sign out of Firebase — workspaceId in userMeta is preserved so re-login reconnects to the same workspace
   fbAuth.signOut().catch(()=>{});
   // Reset all in-memory state
   S.user = null; S.fbUser = null; S.workspaceId = null;
   S.banks = []; S.credits = []; S.fixed = []; S.fixedIncome = [];
-  S.txs = []; S.members = [];
-  S.monthStartDay = 1; S.notifDays = 3; S.dailyTime = '21:00';
+  S.txs = []; S.members = []; S.cats = []; S.icats = [];
+  S.projects = []; S.declinedFixed = []; S.savingsGoal = 0;
+  S.monthStartDay = 1; S.notifDays = 3; S.dailyTime = '21:00'; S.lang = 'he';
   // Hide app, show auth
   document.getElementById('app').style.display = 'none';
   showScreen('auth');
+  // Reset flag after a brief delay so re-login via onAuthStateChanged works
+  setTimeout(() => { _loggingOut = false; }, 1500);
 }
 
 // ═══════════════════════════════════════════════
@@ -1587,7 +1579,7 @@ function renderBalance() {
       const barColor = saved >= S.savingsGoal ? 'var(--green)' : 'var(--red)';
       sgEl.style.display = 'block';
       sgEl.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-        <div style="font-size:12px;color:var(--text2)">חסכת ${fmtAmt(saved)} מתוך ${fmtAmt(S.savingsGoal)} יעד</div>
+        <div style="font-size:12px;color:var(--text2)">${t('saved_of')} ${fmtAmt(saved)} ${t('goal_of')} ${fmtAmt(S.savingsGoal)} ${t('goal_suffix')}</div>
         <div style="font-size:12px;font-weight:700;color:${barColor}">${pct}%</div>
       </div>
       <div class="goal-bar"><div class="goal-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>`;
@@ -1612,16 +1604,16 @@ function renderBalance() {
 function renderBankCards() {
   const c = document.getElementById('bank-cards');
   if (!c) return;
-  if (!S.banks.length) { c.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px">אין חשבונות עדיין. הוסף בהגדרות.</div>'; return; }
+  if (!S.banks.length) { c.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:8px">${t('empty_banks_hint')}</div>`; return; }
   c.innerHTML = S.banks.map(b => {
     const st = bankStatus(b);
     const overdraftRow = st.rem < 0
-      ? `<div style="color:var(--red);font-size:10px;margin-top:3px;font-weight:600">⚠️ חריגה: ${fmtAmt(Math.abs(st.rem))}</div>`
+      ? `<div style="color:var(--red);font-size:10px;margin-top:3px;font-weight:600">⚠️ ${t('overdraft')} ${fmtAmt(Math.abs(st.rem))}</div>`
       : '';
     return `<div class="bank-card ${st.cls}" onclick="showBankDetail(${b.id})">
       <div class="bank-card-name">${b.name}</div>
       <div class="bank-card-balance">${fmtAmt(b.balance)}</div>
-      <div class="bank-card-info"><span class="status-dot" style="background:${st.dot}"></span>יורד ב-5 ימים: ${fmtAmt(st.upcoming)}</div>
+      <div class="bank-card-info"><span class="status-dot" style="background:${st.dot}"></span>${t('due_in_5')} ${fmtAmt(st.upcoming)}</div>
       ${overdraftRow}
     </div>`;
   }).join('');
@@ -1630,7 +1622,7 @@ function renderBankCards() {
 function renderCreditCards() {
   const c = document.getElementById('cc-list');
   if (!c) return;
-  if (!S.credits.length) { c.innerHTML = '<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">אין כרטיסים עדיין</div></div>'; return; }
+  if (!S.credits.length) { c.innerHTML = `<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">${t('empty_credits')}</div></div>`; return; }
   c.innerHTML = S.credits.map(cc => {
     const bank = S.banks.find(b=>b.id===cc.bankId);
     const result = creditCardCycleTotal(cc);
@@ -1642,7 +1634,7 @@ function renderCreditCards() {
     return `<div class="cc-item" onclick="showCreditDetail(${cc.id})">
       <div style="flex:1">
         <div class="cc-name">💳 ${cc.name}</div>
-        <div class="cc-info">${rangeLbl} • יורד ב-${cc.chargeDate} • ${bank?.name||'?'}</div>
+        <div class="cc-info">${rangeLbl} • ${t('charged_on')}${cc.chargeDate} • ${bank?.name||'?'}</div>
         ${periodRow}
       </div>
       <div class="cc-amount">${fmtAmt(result.total)}</div>
@@ -1655,7 +1647,7 @@ function renderUpcoming() {
   if (!c) return;
   const today = new Date().getDate();
   const items = S.fixed.map(fe => ({...fe, left: fe.day - today})).filter(fe => fe.left >= 0 && fe.left <= 10).sort((a,b) => a.left - b.left);
-  if (!items.length) { c.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">אין חיובים קרובים</div></div>'; return; }
+  if (!items.length) { c.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">${t('empty_upcoming')}</div></div>`; return; }
   c.innerHTML = items.map(fe => {
     const cat = catById(fe.catId, false);
     return `<div class="up-item">
@@ -1669,7 +1661,7 @@ function renderUpcoming() {
 function renderTxList(txs, containerId) {
   const c = document.getElementById(containerId);
   if (!c) return;
-  if (!txs.length) { c.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">אין פעולות</div></div>'; return; }
+  if (!txs.length) { c.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">${t('empty_txs')}</div></div>`; return; }
   c.innerHTML = txs.map(tx => {
     const isIn = tx.type === 'income';
     const cat = catById(tx.catId, isIn);
@@ -1712,8 +1704,9 @@ function renderSettings() {
   if (S.user) {
     const sa = document.getElementById('s-avatar'); if(sa){sa.textContent=S.user.initials;if(S.user.color)sa.style.background=S.user.color;}
     const su = document.getElementById('s-username'); if(su) su.textContent = S.user.name;
+    const sr = document.getElementById('s-user-role'); if(sr) sr.textContent = S.user.role || 'חבר';
     const av = document.getElementById('user-avatar'); if(av){av.textContent=S.user.initials;if(S.user.color)av.style.background=S.user.color;}
-    document.getElementById('ws-name').textContent = 'סביבת העבודה של ' + S.user.name;
+    document.getElementById('ws-name').textContent = t('workspace_of') + ' ' + S.user.name;
   }
   const sm = document.getElementById('s-members');
   if (sm) sm.innerHTML = S.members.map(m => `<div class="member-chip"><div class="member-av" style="background:${m.color}">${m.initials}</div>${m.name} <span style="font-size:10px;color:var(--text3)">(${m.role})</span></div>`).join('');
@@ -1722,57 +1715,57 @@ function renderSettings() {
   if (sb) sb.innerHTML = S.banks.map(b => `<div class="settings-item">
     <div class="settings-item-left"><div class="settings-icon" style="background:${b.color}22">🏦</div>
     <div><div class="settings-name">${b.name}</div><div class="settings-sub">${fmtAmt(b.balance)}</div></div></div>
-    <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editBankModal(${b.id})">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delBank(${b.id})">מחק</span></div>
-  </div>`).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין חשבונות</div>';
+    <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editBankModal(${b.id})">${t('btn_edit')}</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delBank(${b.id})">${t('btn_delete')}</span></div>
+  </div>`).join('') || `<div style="color:var(--text3);font-size:12px;padding:6px">${t('empty_banks')}</div>`;
 
   const sc = document.getElementById('s-credits');
   if (sc) sc.innerHTML = S.credits.map(cc => {
     const bank = S.banks.find(b=>b.id===cc.bankId);
     return `<div class="settings-item">
       <div class="settings-item-left"><div class="settings-icon" style="background:rgba(108,99,255,0.15)">💳</div>
-      <div><div class="settings-name">${cc.name}</div><div class="settings-sub">יורד ב-${cc.chargeDate} • ${bank?.name||'?'}</div></div></div>
-      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editCreditModal(${cc.id})">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delCredit(${cc.id})">מחק</span></div>
+      <div><div class="settings-name">${cc.name}</div><div class="settings-sub">${t('charged_on')}${cc.chargeDate} • ${bank?.name||'?'}</div></div></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editCreditModal(${cc.id})">${t('btn_edit')}</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delCredit(${cc.id})">${t('btn_delete')}</span></div>
     </div>`;
-  }).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין כרטיסים</div>';
+  }).join('') || `<div style="color:var(--text3);font-size:12px;padding:6px">${t('empty_credits')}</div>`;
 
   const sf = document.getElementById('s-fixed');
   if (sf) sf.innerHTML = S.fixed.map(fe => {
     const cat = catById(fe.catId, false);
     return `<div class="settings-item">
       <div class="settings-item-left"><div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
-      <div><div class="settings-name">${fe.name}</div><div class="settings-sub">${fmtAmt(fe.amount)} • יום ${fe.day}</div></div></div>
-      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editFixedModal(${fe.id},false)">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delFixed(${fe.id},false)">מחק</span></div>
+      <div><div class="settings-name">${fe.name}</div><div class="settings-sub">${fmtAmt(fe.amount)} • ${S.lang==='en'?'Day':'יום'} ${fe.day}</div></div></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editFixedModal(${fe.id},false)">${t('btn_edit')}</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delFixed(${fe.id},false)">${t('btn_delete')}</span></div>
     </div>`;
-  }).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין הוצאות קבועות</div>';
+  }).join('') || `<div style="color:var(--text3);font-size:12px;padding:6px">${t('empty_fixed_expense')}</div>`;
 
   const sfi = document.getElementById('s-fixed-income');
   if (sfi) sfi.innerHTML = S.fixedIncome.map(fi => {
     const cat = catById(fi.catId, true);
     return `<div class="settings-item">
       <div class="settings-item-left"><div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
-      <div><div class="settings-name">${fi.name}</div><div class="settings-sub">${fmtAmt(fi.amount)} • יום ${fi.day}</div></div></div>
-      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editFixedModal(${fi.id},true)">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delFixed(${fi.id},true)">מחק</span></div>
+      <div><div class="settings-name">${fi.name}</div><div class="settings-sub">${fmtAmt(fi.amount)} • ${S.lang==='en'?'Day':'יום'} ${fi.day}</div></div></div>
+      <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editFixedModal(${fi.id},true)">${t('btn_edit')}</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delFixed(${fi.id},true)">${t('btn_delete')}</span></div>
     </div>`;
-  }).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין הכנסות קבועות</div>';
+  }).join('') || `<div style="color:var(--text3);font-size:12px;padding:6px">${t('empty_fixed_income')}</div>`;
 
   const sca = document.getElementById('s-cats');
   if (sca) sca.innerHTML = S.cats.map(cat => `<div class="settings-item">
     <div class="settings-item-left"><div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
     <div><div class="settings-name">${cat.name}</div></div></div>
-    <span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delCat(${cat.id},false)">מחק</span>
+    <span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delCat(${cat.id},false)">${t('btn_delete')}</span>
   </div>`).join('');
 
   const sic = document.getElementById('s-icats');
   if (sic) sic.innerHTML = S.icats.map(cat => `<div class="settings-item">
     <div class="settings-item-left"><div class="settings-icon" style="background:${cat.color}22">${cat.icon}</div>
     <div><div class="settings-name">${cat.name}</div></div></div>
-    <span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delCat(${cat.id},true)">מחק</span>
+    <span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delCat(${cat.id},true)">${t('btn_delete')}</span>
   </div>`).join('');
 
-  const snd = document.getElementById('s-notif-days'); if (snd) snd.textContent = S.notifDays + ' ימים לפני חיוב';
+  const snd = document.getElementById('s-notif-days'); if (snd) snd.textContent = S.notifDays + ' ' + t('days_before_charge');
   const sdt = document.getElementById('s-daily-time'); if (sdt) sdt.textContent = S.dailyTime;
   const scd = document.getElementById('s-cycle-day');
-  if (scd) scd.textContent = (S.monthStartDay || 1) === 1 ? '1 (חודש קלנדרי)' : `${S.monthStartDay} לחודש`;
+  if (scd) scd.textContent = (S.monthStartDay || 1) === 1 ? t('calendar_month') : `${S.monthStartDay} ${t('day_of_month')}`;
   // Highlight active language button
   const bHe = document.getElementById('lang-btn-he'), bEn = document.getElementById('lang-btn-en');
   if (bHe && bEn) {
@@ -1780,13 +1773,13 @@ function renderSettings() {
     bEn.className = 'type-btn' + (S.lang === 'en' ? ' t-income' : '');
   }
   const ssg = document.getElementById('s-savings-goal');
-  if (ssg) ssg.textContent = S.savingsGoal > 0 ? fmtAmt(S.savingsGoal) + ' לחודש' : 'לא מוגדר';
+  if (ssg) ssg.textContent = S.savingsGoal > 0 ? fmtAmt(S.savingsGoal) + ' ' + t('per_month') : t('not_set');
   const sproj = document.getElementById('s-projects');
   if (sproj) sproj.innerHTML = S.projects.map(p => `<div class="settings-item">
     <div class="settings-item-left"><div class="settings-icon" style="background:rgba(108,99,255,0.15)">${p.icon||'📁'}</div>
     <div><div class="settings-name">${p.name}</div><div class="settings-sub">${fmtAmt(p.budget)} • ${p.startDate||''}</div></div></div>
-    <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editProjectModal('${p.id}')">עריכה</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delProject('${p.id}')">מחק</span></div>
-  </div>`).join('') || '<div style="color:var(--text3);font-size:12px;padding:6px">אין פרויקטים</div>';
+    <div style="display:flex;gap:10px"><span style="color:var(--accent);font-size:12px;cursor:pointer" onclick="editProjectModal('${p.id}')">${t('btn_edit')}</span><span style="color:var(--red);font-size:12px;cursor:pointer" onclick="delProject('${p.id}')">${t('btn_delete')}</span></div>
+  </div>`).join('') || `<div style="color:var(--text3);font-size:12px;padding:6px">${t('empty_projects')}</div>`;
 }
 
 // ═══════════════════════════════════════════════
@@ -1823,15 +1816,15 @@ function renderAnChart() {
     const inc = months.map((_,mi) => S.txs.filter(t=>t.type==='income'&&new Date(t.date).getMonth()===mi&&new Date(t.date).getFullYear()===S.year).reduce((s,t)=>s+t.amount,0));
     const exp = months.map((_,mi) => S.txs.filter(t=>t.type==='expense'&&new Date(t.date).getMonth()===mi&&new Date(t.date).getFullYear()===S.year).reduce((s,t)=>s+t.amount,0));
     datasets = [
-      {label:'הכנסות',data:inc,backgroundColor:'rgba(46,204,113,0.7)',borderRadius:5},
-      {label:'הוצאות',data:exp,backgroundColor:'rgba(231,76,60,0.7)',borderRadius:5},
+      {label:t('ant_income'),data:inc,backgroundColor:'rgba(46,204,113,0.7)',borderRadius:5},
+      {label:t('ant_expense'),data:exp,backgroundColor:'rgba(231,76,60,0.7)',borderRadius:5},
     ];
-    if (titleEl) titleEl.textContent = 'השוואה שנתית – ' + S.year;
+    if (titleEl) titleEl.textContent = t('annual_compare') + ' ' + S.year;
   } else {
     const isInc = anTab==='income';
-    const data = months.map((_,mi) => S.txs.filter(t=>t.type===(isInc?'income':'expense')&&new Date(t.date).getMonth()===mi&&new Date(t.date).getFullYear()===S.year).reduce((s,t)=>s+t.amount,0));
-    datasets = [{label:isInc?'הכנסות':'הוצאות',data,backgroundColor:isInc?'rgba(46,204,113,0.7)':'rgba(231,76,60,0.7)',borderRadius:5}];
-    if (titleEl) titleEl.textContent = (isInc?'הכנסות':'הוצאות') + ' לפי חודש – ' + S.year;
+    const data = months.map((_,mi) => S.txs.filter(tx=>tx.type===(isInc?'income':'expense')&&new Date(tx.date).getMonth()===mi&&new Date(tx.date).getFullYear()===S.year).reduce((s,tx)=>s+tx.amount,0));
+    datasets = [{label:isInc?t('ant_income'):t('ant_expense'),data,backgroundColor:isInc?'rgba(46,204,113,0.7)':'rgba(231,76,60,0.7)',borderRadius:5}];
+    if (titleEl) titleEl.textContent = (isInc?t('ant_income'):t('ant_expense')) + ' ' + t('by_month') + ' ' + S.year;
   }
 
   mainChart = new Chart(canvas, {
@@ -1890,13 +1883,13 @@ function renderCatBars() {
 
   const tEl = document.getElementById('an-cat-title');
   const vEl = document.getElementById('an-cat-total');
-  if (tEl) tEl.textContent = (isInc?'הכנסות':'הוצאות') + ' לפי קטגוריה – ' + MONTHS[S.month];
+  if (tEl) tEl.textContent = (isInc?t('ant_income'):t('ant_expense')) + ' ' + (S.lang==='en'?'by Category –':'לפי קטגוריה –') + ' ' + MONTHS[S.month];
   if (vEl) { vEl.textContent = total?fmtAmt(total):''; vEl.style.color = isInc?'var(--green)':'var(--red)'; }
 
   const c = document.getElementById('cat-bars');
   if (!c) return;
   const items = cats.map(cat=>({cat,total:totals[cat.id]||0})).filter(i=>i.total>0).sort((a,b)=>b.total-a.total);
-  if (!items.length) { c.innerHTML = '<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">אין נתונים לחודש זה</div></div>'; return; }
+  if (!items.length) { c.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">${t('empty_analytics')}</div></div>`; return; }
   c.innerHTML = items.map(({cat,total:ct})=>{
     const pct = total ? Math.round(ct/total*100) : 0;
     return `<div class="cat-bar-item" onclick="showCatDetail(${cat.id})">
@@ -1981,40 +1974,40 @@ let txType = 'expense';
 function showAddTxModal() {
   txType = 'expense';
   openModal(`
-    <div class="modal-hdr"><div class="modal-title">פעולה חדשה</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div class="modal-hdr"><div class="modal-title">${t('modal_add_tx')}</div><div class="modal-close" onclick="closeModal()">×</div></div>
     <div class="type-toggle">
-      <button class="type-btn t-expense" id="ttb-expense" onclick="setTxType('expense')">הוצאה</button>
-      <button class="type-btn" id="ttb-income" onclick="setTxType('income')">הכנסה</button>
-      <button class="type-btn" id="ttb-transfer" onclick="setTxType('transfer')">העברה</button>
+      <button class="type-btn t-expense" id="ttb-expense" onclick="setTxType('expense')">${t('tx_expense')}</button>
+      <button class="type-btn" id="ttb-income" onclick="setTxType('income')">${t('tx_income')}</button>
+      <button class="type-btn" id="ttb-transfer" onclick="setTxType('transfer')">${t('tx_transfer')}</button>
     </div>
-    <div class="fg"><label class="fl">תיאור</label><input class="fi" id="tx-name" placeholder="שופרסל, משכורת..."></div>
-    <div class="fg"><label class="fl">סכום (₪)</label><input class="fi" id="tx-amt" type="number" placeholder="0" inputmode="decimal"></div>
-    <div class="fg"><label class="fl">תאריך</label><input class="fi" id="tx-date" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
-    <div class="fg" id="tx-cat-g"><label class="fl">קטגוריה</label>
+    <div class="fg"><label class="fl">${t('lbl_name')}</label><input class="fi" id="tx-name" placeholder="${S.lang==='en'?'Supermarket, salary...':'שופרסל, משכורת...'}"></div>
+    <div class="fg"><label class="fl">${t('lbl_amount')} (₪)</label><input class="fi" id="tx-amt" type="number" placeholder="0" inputmode="decimal"></div>
+    <div class="fg"><label class="fl">${t('lbl_date')}</label><input class="fi" id="tx-date" type="date" value="${new Date().toISOString().split('T')[0]}"></div>
+    <div class="fg" id="tx-cat-g"><label class="fl">${t('lbl_category')}</label>
       <select class="fs" id="tx-cat">${S.cats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select></div>
-    <div class="fg" id="tx-icat-g" style="display:none"><label class="fl">קטגוריית הכנסה</label>
+    <div class="fg" id="tx-icat-g" style="display:none"><label class="fl">${t('lbl_category')}</label>
       <select class="fs" id="tx-icat">${S.icats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}</select></div>
-    <div class="fg" id="tx-pay-g"><label class="fl">אמצעי תשלום</label>
+    <div class="fg" id="tx-pay-g"><label class="fl">${t('lbl_payment')}</label>
       <select class="fs" id="tx-pay">
-        <option value="cash">מזומן</option>
+        <option value="cash">${S.lang==='en'?'Cash':'מזומן'}</option>
         ${S.credits.map(cc=>`<option value="credit_${cc.id}">💳 ${cc.name}</option>`).join('')}
-        ${S.banks.map(b=>`<option value="bank_${b.id}">🏦 ${b.name} (העברה)</option>`).join('')}
+        ${S.banks.map(b=>`<option value="bank_${b.id}">🏦 ${b.name} (${S.lang==='en'?'Transfer':'העברה'})</option>`).join('')}
       </select></div>
-    <div class="fg" id="tx-bank-g" style="display:none"><label class="fl">לחשבון בנק</label>
+    <div class="fg" id="tx-bank-g" style="display:none"><label class="fl">${t('lbl_bank')}</label>
       <select class="fs" id="tx-bank">${S.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
-    <div class="fg" id="tx-from-g" style="display:none"><label class="fl">מחשבון</label>
+    <div class="fg" id="tx-from-g" style="display:none"><label class="fl">${t('lbl_from_bank')}</label>
       <select class="fs" id="tx-from">${S.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
-    <div class="fg" id="tx-to-g" style="display:none"><label class="fl">לחשבון</label>
+    <div class="fg" id="tx-to-g" style="display:none"><label class="fl">${t('lbl_to_bank')}</label>
       <select class="fs" id="tx-to">${S.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
-    <div class="fg"><label class="fl">הערה (אופציונלי)</label><input class="fi" id="tx-note" placeholder="הערה..."></div>
+    <div class="fg"><label class="fl">${t('lbl_note')}</label><input class="fi" id="tx-note" placeholder="${S.lang==='en'?'Note...':'הערה...'}"></div>
     <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg3);border-radius:var(--rs);margin-bottom:8px">
       <input type="checkbox" id="tx-recurring" style="width:18px;height:18px;cursor:pointer">
-      <label for="tx-recurring" style="font-size:13px;cursor:pointer" id="tx-recurring-lbl">הפוך להוצאה קבועה חוזרת</label>
+      <label for="tx-recurring" style="font-size:13px;cursor:pointer" id="tx-recurring-lbl">${S.lang==='en'?'Make recurring fixed expense':'הפוך להוצאה קבועה חוזרת'}</label>
     </div>
-    <div class="fg" id="tx-rec-day-g" style="display:none"><label class="fl">יום בחודש</label><input class="fi" id="tx-rec-day" type="number" min="1" max="31" placeholder="1" inputmode="numeric"></div>
+    <div class="fg" id="tx-rec-day-g" style="display:none"><label class="fl">${S.lang==='en'?'Day of month':'יום בחודש'}</label><input class="fi" id="tx-rec-day" type="number" min="1" max="31" placeholder="1" inputmode="numeric"></div>
     <div id="tx-quick-section"></div>
-    <button class="btn-primary" onclick="submitTx()">הוסף פעולה</button>
-    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+    <button class="btn-primary" onclick="submitTx()">${t('btn_add_tx')}</button>
+    <button class="btn-secondary" onclick="closeModal()">${t('btn_cancel')}</button>
   `);
   renderQuickSection();
 }
@@ -2034,7 +2027,7 @@ function setTxType(t) {
   show('tx-to-g',     t==='transfer');
   // Update recurring label
   const lbl = document.getElementById('tx-recurring-lbl');
-  if (lbl) lbl.textContent = t==='income' ? 'הפוך להכנסה קבועה חוזרת' : 'הפוך להוצאה קבועה חוזרת';
+  if (lbl) lbl.textContent = S.lang==='en' ? (t==='income'?'Make recurring fixed income':'Make recurring fixed expense') : (t==='income'?'הפוך להכנסה קבועה חוזרת':'הפוך להוצאה קבועה חוזרת');
   // Hide recurring for transfers
   const recRow = document.getElementById('tx-recurring')?.parentElement;
   if (recRow) recRow.style.display = t==='transfer' ? 'none' : '';
@@ -2047,7 +2040,7 @@ function submitTx() {
   const name = document.getElementById('tx-name').value.trim();
   const amt  = parseFloat(document.getElementById('tx-amt').value);
   const date = document.getElementById('tx-date').value;
-  if (!name || !amt || !date) { toast('⚠️ נא למלא את כל השדות','warn'); return; }
+  if (!name || !amt || !date) { toast(S.lang==='en'?'⚠️ Please fill all fields':'⚠️ נא למלא את כל השדות','warn'); return; }
   const tx = { id: Date.now(), type: txType, name, amount: amt, date, note: document.getElementById('tx-note').value };
   if (txType === 'expense') {
     tx.catId = parseInt(document.getElementById('tx-cat').value);
@@ -2096,9 +2089,9 @@ function submitTx() {
       fe.payMethod = tx.payMethod; fe.creditId = tx.creditId; fe.bankId = tx.bankId;
       S.fixed.push(fe);
     }
-    toast('✅ פעולה נוספה + נשמרה כקבועה','success');
+    toast(t('toast_tx_added') + (S.lang==='en'?' + saved as recurring':' + נשמרה כקבועה'),'success');
   } else {
-    toast('✅ הפעולה נוספה','success');
+    toast(t('toast_tx_added'),'success');
   }
 
   closeModal(); render(); fbSave();
@@ -2204,7 +2197,7 @@ function saveEditTx(id) {
   }
 
   closeModal(); render(); fbSave();
-  toast('✅ פעולה עודכנה','success');
+  toast(t('toast_tx_updated'),'success');
 }
 
 function deleteTx(id) {
@@ -2239,7 +2232,7 @@ function submitAddBank() {
   if (!name) { toast('⚠️ נא להזין שם','warn'); return; }
   S.banks.push({id:Date.now(),name,balance:bal,color});
   closeModal(); render(); renderSettings(); fbSave();
-  toast('✅ חשבון נוסף','success');
+  toast(t('toast_bank_added'),'success');
 }
 
 function editBankModal(id) {
@@ -2257,9 +2250,9 @@ function saveEditBank(id) {
   const b=S.banks.find(x=>x.id===id); if(!b) return;
   b.name=document.getElementById('eb-name').value;
   b.balance=parseFloat(document.getElementById('eb-bal').value)||0;
-  closeModal(); render(); renderSettings(); fbSave(); toast('✅ עודכן','success');
+  closeModal(); render(); renderSettings(); fbSave(); toast(t('toast_bank_updated'),'success');
 }
-function delBank(id) { if(!confirm('למחוק?')) return; S.banks=S.banks.filter(b=>b.id!==id); closeModal(); render(); renderSettings(); fbSave(); }
+function delBank(id) { if(!confirm(t('confirm_delete'))) return; S.banks=S.banks.filter(b=>b.id!==id); closeModal(); render(); renderSettings(); fbSave(); }
 
 function showBankDetail(id) {
   const b = S.banks.find(x => x.id === id); if (!b) return;
@@ -2451,7 +2444,7 @@ function submitAddCredit() {
   const bankId=parseInt(document.getElementById('nc-bank').value);
   if(!name||!day){toast('⚠️ נא למלא הכל','warn');return;}
   S.credits.push({id:Date.now(),name,chargeDate:day,bankId});
-  closeModal(); renderCreditCards(); renderSettings(); fbSave(); toast('✅ כרטיס נוסף','success');
+  closeModal(); renderCreditCards(); renderSettings(); fbSave(); toast(t('toast_credit_added'),'success');
 }
 function editCreditModal(id) {
   const cc=S.credits.find(x=>x.id===id); if(!cc) return;
@@ -2471,9 +2464,9 @@ function saveEditCredit(id) {
   cc.name=document.getElementById('ec-name').value;
   cc.chargeDate=parseInt(document.getElementById('ec-day').value);
   cc.bankId=parseInt(document.getElementById('ec-bank').value);
-  closeModal(); renderCreditCards(); renderSettings(); fbSave(); toast('✅ עודכן','success');
+  closeModal(); renderCreditCards(); renderSettings(); fbSave(); toast(t('toast_credit_updated'),'success');
 }
-function delCredit(id) { if(!confirm('למחוק?')) return; S.credits=S.credits.filter(c=>c.id!==id); closeModal(); renderCreditCards(); renderSettings(); fbSave(); }
+function delCredit(id) { if(!confirm(t('confirm_delete'))) return; S.credits=S.credits.filter(c=>c.id!==id); closeModal(); renderCreditCards(); renderSettings(); fbSave(); }
 
 // ═══════════════════════════════════════════════
 // FIXED INCOME/EXPENSE MODALS
@@ -2518,7 +2511,7 @@ function submitAddFixed(isIncome) {
     else{fe.payMethod='bank';fe.bankId=parseInt(pay.split('_')[1]);}
     S.fixed.push(fe);
   }
-  closeModal(); renderUpcoming(); renderSettings(); fbSave(); toast('✅ נוסף','success');
+  closeModal(); renderUpcoming(); renderSettings(); fbSave(); toast(t('toast_fixed_added'),'success');
 }
 
 function editFixedModal(id, isIncome) {
@@ -2562,11 +2555,11 @@ function saveEditFixed(id, isIncome) {
     if(pay.startsWith('credit_')){fe.payMethod='credit';fe.creditId=parseInt(pay.split('_')[1]);delete fe.bankId;}
     else{fe.payMethod='bank';fe.bankId=parseInt(pay.split('_')[1]);delete fe.creditId;}
   }
-  closeModal(); renderUpcoming(); renderSettings(); fbSave(); toast('✅ עודכן','success');
+  closeModal(); renderUpcoming(); renderSettings(); fbSave(); toast(t('toast_fixed_updated'),'success');
 }
 
 function delFixed(id, isIncome) {
-  if(!confirm('למחוק?')) return;
+  if(!confirm(t('confirm_delete'))) return;
   if (isIncome) S.fixedIncome=S.fixedIncome.filter(f=>f.id!==id);
   else S.fixed=S.fixed.filter(f=>f.id!==id);
   closeModal(); renderUpcoming(); renderSettings(); fbSave();
@@ -2671,7 +2664,7 @@ function submitAddCat(isIncome) {
   if(!name){toast('⚠️ נא להזין שם','warn');return;}
   const cat={id:Date.now(),name,icon,color};
   if(isIncome) S.icats.push(cat); else S.cats.push(cat);
-  closeModal(); renderSettings(); fbSave(); toast('✅ קטגוריה נוספה','success');
+  closeModal(); renderSettings(); fbSave(); toast(t('toast_cat_added'),'success');
 }
 function delCat(id,isIncome) { if(isIncome) S.icats=S.icats.filter(c=>c.id!==id); else S.cats=S.cats.filter(c=>c.id!==id); renderSettings(); fbSave(); }
 
@@ -2691,19 +2684,20 @@ function pickColor(el, color, inputId) {
 // ═══════════════════════════════════════════════
 function showEditUsername() {
   openModal(`
-    <div class="modal-hdr"><div class="modal-title">שנה שם משתמש</div><div class="modal-close" onclick="closeModal()">×</div></div>
-    <div class="fg"><label class="fl">שם משתמש חדש</label><input class="fi" id="eu-name" value="${S.user?.name||''}" maxlength="20"></div>
-    <button class="btn-primary" onclick="saveUsername()">שמור</button>
-    <button class="btn-secondary" onclick="closeModal()">ביטול</button>
+    <div class="modal-hdr"><div class="modal-title">${t('modal_edit_name')}</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div class="fg"><label class="fl">${t('lbl_new_name')}</label><input class="fi" id="eu-name" value="${S.user?.name||''}" maxlength="20"></div>
+    <button class="btn-primary" onclick="saveUsername()">${t('btn_save')}</button>
+    <button class="btn-secondary" onclick="closeModal()">${t('btn_cancel')}</button>
   `);
 }
 function saveUsername() {
   const name=document.getElementById('eu-name').value.trim();
   if(!name) return;
   S.user.name=name; S.user.initials=name[0].toUpperCase();
-  const mi=S.members.findIndex(m=>m.name===S.user.name||m.initials===S.user.initials);
+  // Update member entry by UID (reliable) or fall back to name match
+  const mi = S.members.findIndex(m => m.uid === S.fbUser?.uid);
   if(mi>=0){S.members[mi].name=name;S.members[mi].initials=name[0].toUpperCase();}
-  closeModal(); renderSettings(); fbSave(); toast('✅ שם עודכן','success');
+  closeModal(); renderSettings(); fbSave(); toast(t('toast_name_updated'),'success');
 }
 
 function showInviteModal() {
@@ -2737,7 +2731,7 @@ function showInviteModal() {
     <button class="btn-secondary" style="margin-top:10px" onclick="closeModal()">סגור</button>
   `);
 }
-function copyInvite(url) { navigator.clipboard?.writeText(url); toast('📋 קישור הועתק','success'); }
+function copyInvite(url) { navigator.clipboard?.writeText(url); toast(t('toast_link_copied'),'success'); }
 
 function showNotifSettings() {
   openModal(`
@@ -2747,7 +2741,7 @@ function showNotifSettings() {
     <button class="btn-secondary" onclick="closeModal()">ביטול</button>
   `);
 }
-function saveNotifDays() { S.notifDays=parseInt(document.getElementById('nd-days').value)||3; closeModal(); renderSettings(); fbSave(); toast('✅ נשמר','success'); }
+function saveNotifDays() { S.notifDays=parseInt(document.getElementById('nd-days').value)||3; closeModal(); renderSettings(); fbSave(); toast(t('toast_saved'),'success'); }
 
 function showDailyNotif() {
   openModal(`
@@ -2758,7 +2752,7 @@ function showDailyNotif() {
     <button class="btn-secondary" onclick="closeModal()">ביטול</button>
   `);
 }
-function saveDailyTime() { S.dailyTime=document.getElementById('nd-time').value; closeModal(); renderSettings(); fbSave(); toast('✅ תזכורת הוגדרה ל-'+S.dailyTime,'success'); }
+function saveDailyTime() { S.dailyTime=document.getElementById('nd-time').value; closeModal(); renderSettings(); fbSave(); toast(t('toast_saved')+' '+S.dailyTime,'success'); }
 
 function showCycleSettings() {
   openModal(`
@@ -2773,7 +2767,7 @@ function saveCycleDay() {
   const day = Math.min(31, Math.max(1, parseInt(document.getElementById('cycle-day').value) || 1));
   S.monthStartDay = day;
   closeModal(); renderSettings(); render(); fbSave();
-  toast('✅ מחזור חיוב עודכן – מיום ' + day + ' לחודש', 'success');
+  toast(t('toast_cycle_updated') + ' ' + day, 'success');
 }
 
 // ═══════════════════════════════════════════════
@@ -2893,7 +2887,7 @@ function showSavingsGoalModal() {
 function saveSavingsGoal() {
   S.savingsGoal = parseFloat(document.getElementById('sg-val').value)||0;
   closeModal(); renderSettings(); render(); fbSave();
-  toast('✅ יעד חיסכון עודכן','success');
+  toast(t('toast_savings_updated'),'success');
 }
 
 // ═══════════════════════════════════════════════
@@ -2947,7 +2941,7 @@ function submitAddProject() {
   };
   S.projects.push(proj);
   closeModal(); renderProjects(); renderSettings(); fbSave();
-  toast('✅ פרויקט נוסף','success');
+  toast(t('toast_project_added'),'success');
 }
 function editProjectModal(id) {
   const p = S.projects.find(x=>x.id===id); if (!p) return;
@@ -2970,10 +2964,10 @@ function saveEditProject(id) {
   p.budget = parseFloat(document.getElementById('ep-budget').value)||0;
   p.startDate = document.getElementById('ep-start').value;
   p.endDate = document.getElementById('ep-end').value;
-  closeModal(); renderProjects(); renderSettings(); fbSave(); toast('✅ עודכן','success');
+  closeModal(); renderProjects(); renderSettings(); fbSave(); toast(t('toast_project_updated'),'success');
 }
 function delProject(id) {
-  if (!confirm('למחוק פרויקט?')) return;
+  if (!confirm(t('confirm_delete_project'))) return;
   S.projects = S.projects.filter(p=>p.id!==id);
   closeModal(); renderProjects(); renderSettings(); fbSave();
 }
@@ -3110,20 +3104,10 @@ async function submitFeedback() {
       timestamp: new Date().toISOString(),
       appVersion: '1.0',
     });
-    closeModal(); toast('✅ תודה על המשוב!','success');
-  } catch(e) { toast('❌ שגיאה בשמירה','warn'); }
+    closeModal(); toast(t('toast_feedback_sent'),'success');
+  } catch(e) { toast(t('toast_error')||'❌ Error','warn'); }
 }
 
-// ═══════════════════════════════════════════════
-// EXPORT DATA
-// ═══════════════════════════════════════════════
-function exportData() {
-  const data = { banks: S.banks, credits: S.credits, fixed: S.fixed, fixedIncome: S.fixedIncome, txs: S.txs, cats: S.cats, icats: S.icats, projects: S.projects, exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'budget-export-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
-  toast('📤 הנתונים יורדים...','success');
-}
 
 // ═══════════════════════════════════════════════
 // TERMS OF USE
@@ -3188,8 +3172,8 @@ function showReportModal() {
   const lastYm = lastY + '-' + String(lastM).padStart(2,'0');
   const projOptions = S.projects.map(p=>`<option value="proj_${p.id}">${p.icon||'📁'} ${p.name}</option>`).join('');
   openModal(`
-    <div class="modal-hdr"><div class="modal-title">📄 הוצא דוח</div><div class="modal-close" onclick="closeModal()">×</div></div>
-    <div class="fg"><label class="fl">טווח תאריכים</label>
+    <div class="modal-hdr"><div class="modal-title">${t('modal_report')}</div><div class="modal-close" onclick="closeModal()">×</div></div>
+    <div class="fg"><label class="fl">${t('lbl_date_range')}</label>
       <select class="fs" id="rep-range" onchange="repRangeChange()">
         <option value="this_month">החודש הנוכחי (${MONTHS[today.getMonth()]})</option>
         <option value="last_month">החודש הקודם (${MONTHS[lastM-1]})</option>
@@ -3204,7 +3188,7 @@ function showReportModal() {
       <div class="fg"><label class="fl">מתאריך</label><input class="fi" id="rep-from" type="date"></div>
       <div class="fg"><label class="fl">עד תאריך</label><input class="fi" id="rep-to" type="date" value="${today.toISOString().split('T')[0]}"></div>
     </div>
-    <button class="btn-primary" onclick="generateReport()">הצג דוח</button>
+    <button class="btn-primary" onclick="generateReport()">${t('btn_show_report')}</button>
     <div id="rep-summary" style="display:none;margin-top:14px"></div>
     <div id="rep-actions" style="display:none;margin-top:10px;display:none">
       <button class="btn-secondary" onclick="downloadReportPDF()" style="margin-top:0">📄 הורד PDF</button>
@@ -3264,49 +3248,16 @@ function generateReport() {
   sumEl.style.display = 'block';
   sumEl.innerHTML = `
     <div style="background:var(--bg3);border-radius:var(--rs);padding:14px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>הכנסות</span><span style="color:var(--green);font-weight:700">${fmtAmt(income)}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>הוצאות</span><span style="color:var(--red);font-weight:700">${fmtAmt(expense)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid var(--border)"><span style="font-weight:600">מאזן</span><span style="color:${income-expense>=0?'var(--green)':'var(--red)'};font-weight:700">${fmtAmt(income-expense)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>${t('report_income')}</span><span style="color:var(--green);font-weight:700">${fmtAmt(income)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>${t('report_expense')}</span><span style="color:var(--red);font-weight:700">${fmtAmt(expense)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid var(--border)"><span style="font-weight:600">${t('report_balance')}</span><span style="color:${income-expense>=0?'var(--green)':'var(--red)'};font-weight:700">${fmtAmt(income-expense)}</span></div>
     </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">לפי קטגוריה</div>
-    ${catRows||'<div style="color:var(--text3);font-size:12px">אין נתונים</div>'}
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">${t('report_by_cat')}</div>
+    ${catRows||`<div style="color:var(--text3);font-size:12px">${t('report_no_data')}</div>`}
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn-secondary" style="margin-top:0" onclick="downloadReportPDF()">📄 PDF</button>
-      <button class="btn-secondary" style="margin-top:0" onclick="downloadReportExcel()">📊 Excel</button>
+      <button class="btn-secondary" style="margin-top:0" onclick="downloadReportPDF()">${t('btn_download_pdf')}</button>
+      <button class="btn-secondary" style="margin-top:0" onclick="downloadReportExcel()">${t('btn_download_excel')}</button>
     </div>`;
-}
-function downloadReportPDF() {
-  if (!_reportData) return;
-  const { jsPDF } = window.jspdf || window;
-  if (!jsPDF) { toast('⏳ טוען jsPDF...','info'); return; }
-  const doc = new jsPDF();
-  doc.setFontSize(18);
-  doc.text('Budget Report', 14, 20);
-  doc.setFontSize(11);
-  doc.text(_reportData.fromStr + ' to ' + _reportData.toStr, 14, 30);
-  doc.text('Income: ' + _reportData.income, 14, 40);
-  doc.text('Expense: ' + _reportData.expense, 14, 48);
-  doc.text('Balance: ' + (_reportData.income - _reportData.expense), 14, 56);
-  let y = 68;
-  doc.text('Date', 14, y); doc.text('Name', 50, y); doc.text('Type', 120, y); doc.text('Amount', 160, y); y+=6;
-  _reportData.txs.forEach(t => {
-    if (y>270){doc.addPage();y=20;}
-    doc.text(t.date,14,y); doc.text(t.name.substring(0,28),50,y);
-    doc.text(t.type==='income'?'Income':'Expense',120,y);
-    doc.text(String(t.amount),160,y); y+=7;
-  });
-  doc.save('budget-report.pdf');
-}
-function downloadReportExcel() {
-  if (!_reportData || typeof XLSX === 'undefined') { toast('⏳ טוען XLSX...','info'); return; }
-  const rows = _reportData.txs.map(t => ({
-    תאריך: t.date, שם: t.name, סוג: t.type==='income'?'הכנסה':'הוצאה',
-    סכום: t.amount, קטגוריה: catById(t.catId, t.type==='income').name
-  }));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'דוח');
-  XLSX.writeFile(wb, 'budget-report.xlsx');
 }
 
 // ═══════════════════════════════════════════════
@@ -3360,22 +3311,236 @@ function dedupMembers(arr) {
 // ═══════════════════════════════════════════════
 const TRANSLATIONS = {
   he: {
+    // Nav
     nav_dashboard: 'דשבורד', nav_transactions: 'פעולות', nav_projects: 'פרויקטים',
     nav_analytics: 'ניתוח', nav_settings: 'הגדרות',
+    // Balance card
+    lbl_monthly_balance: 'מאזן חודשי',
     lbl_income: 'הכנסות', lbl_expense: 'הוצאות', lbl_remaining: 'נשאר החודש',
-    settings_lang_title: 'שפת האפליקציה',
+    // Dashboard sections
+    sec_banks: 'חשבונות בנק', sec_credits: 'כרטיסי אשראי',
+    sec_upcoming: 'חיובים קרובים', sec_recent: 'פעולות אחרונות',
+    btn_add: '+ הוסף', btn_all: 'הכל',
+    // Analytics
+    ant_expense: 'הוצאות', ant_income: 'הכנסות', ant_compare: 'השוואה',
+    btn_report: '📄 הוצא דוח',
+    // Projects
+    projects_title: 'פרויקטים וטיולים', btn_add_project: '+ הוסף',
+    // Settings
+    settings_title: 'הגדרות', settings_lang_title: 'שפת האפליקציה',
+    settings_profile: 'פרופיל וסביבת עבודה',
+    settings_banks: 'חשבונות בנק', settings_credits: 'כרטיסי אשראי',
+    settings_fixed_expense: 'הוצאות קבועות', settings_fixed_income: 'הכנסות קבועות',
+    settings_cats_expense: 'קטגוריות הוצאות', settings_cats_income: 'קטגוריות הכנסות',
+    settings_billing: 'מחזור חיוב', settings_notifications: 'התראות',
+    settings_projects: 'פרויקטים', settings_help: 'עזרה',
+    // Settings items
+    s_billing_day: 'יום התחלת חודש', s_savings_goal: 'יעד חיסכון חודשי',
+    s_notif_charge: 'התראות חיוב', s_notif_daily: 'תזכורת יומית',
+    s_help_guide: 'מדריך עזרה', s_help_guide_sub: 'הסבר מפורט על כל הפיצ\'רים',
+    s_help_tour: 'סיור מודרך', s_help_tour_sub: 'עבור שוב על הסיור הראשוני',
+    s_terms: 'תנאי שימוש', s_terms_sub: 'קרא את תנאי השימוש',
+    s_feedback: 'שלח משוב', s_feedback_sub: 'עזור לנו לשפר',
+    // Buttons
     btn_add_tx: 'הוסף פעולה', btn_cancel: 'ביטול', btn_save: 'שמור', btn_close: 'סגור',
+    btn_delete: 'מחק', btn_edit: 'עריכה',
+    btn_add_bank: '+ הוסף חשבון בנק', btn_add_credit: '+ הוסף כרטיס',
+    btn_add_fixed: '+ הוסף הוצאה קבועה', btn_add_fixed_income: '+ הוסף הכנסה קבועה',
+    btn_add_cat: '+ הוסף קטגוריה', btn_add_project_s: '+ הוסף פרויקט',
+    btn_invite: '+ הזמן בן/בת זוג', btn_change_name: 'שנה שם', btn_logout: 'יציאה מהחשבון',
+    // TX types
     tx_expense: 'הוצאה', tx_income: 'הכנסה', tx_transfer: 'העברה',
-    settings_title: 'הגדרות',
+    // Empty states
+    empty_banks: 'אין חשבונות', empty_credits: 'אין כרטיסים',
+    empty_fixed_expense: 'אין הוצאות קבועות', empty_fixed_income: 'אין הכנסות קבועות',
+    empty_projects: 'אין פרויקטים', empty_txs: 'אין פעולות',
+    empty_upcoming: 'אין חיובים קרובים', empty_analytics: 'אין נתונים לחודש זה',
+    empty_banks_hint: 'אין חשבונות עדיין. הוסף בהגדרות.',
+    // Dynamic strings
+    workspace_of: 'סביבת העבודה של',
+    days_before_charge: 'ימים לפני חיוב',
+    not_set: 'לא מוגדר',
+    charged_on: 'יורד ב-',
+    due_in_5: 'יורד ב-5 ימים:',
+    overdraft: 'חריגה:',
+    saved_of: 'חסכת', goal_of: 'מתוך', goal_suffix: 'יעד',
+    per_month: 'לחודש',
+    day_of_month: 'לחודש',
+    calendar_month: '1 (חודש קלנדרי)',
+    annual_compare: 'השוואה שנתית –',
+    by_month: 'לפי חודש –',
+    no_data: 'אין נתונים',
+    // Search
+    search_placeholder: 'חפש לפי שם או סכום...',
+    // Modal labels
+    modal_add_tx: 'הוסף פעולה', modal_edit_tx: 'ערוך פעולה',
+    lbl_name: 'תיאור', lbl_amount: 'סכום', lbl_date: 'תאריך',
+    lbl_category: 'קטגוריה', lbl_payment: 'אמצעי תשלום', lbl_note: 'הערה (אופציונלי)',
+    lbl_bank: 'חשבון בנק', lbl_from_bank: 'מחשבון', lbl_to_bank: 'לחשבון',
+    modal_add_bank: 'הוסף חשבון בנק', modal_edit_bank: 'ערוך חשבון',
+    lbl_bank_name: 'שם הבנק', lbl_balance: 'יתרה נוכחית',
+    modal_add_credit: 'הוסף כרטיס אשראי', modal_edit_credit: 'ערוך כרטיס',
+    lbl_card_name: 'שם הכרטיס', lbl_charge_day: 'יום חיוב', lbl_linked_bank: 'בנק מקושר',
+    modal_add_fixed: 'הוסף הוצאה קבועה', modal_edit_fixed: 'ערוך הוצאה קבועה',
+    modal_add_fixed_income: 'הוסף הכנסה קבועה', modal_edit_fixed_income: 'ערוך הכנסה קבועה',
+    modal_add_cat: 'הוסף קטגוריה', lbl_cat_name: 'שם הקטגוריה',
+    modal_add_project: 'הוסף פרויקט', modal_edit_project: 'ערוך פרויקט',
+    lbl_project_name: 'שם הפרויקט', lbl_budget: 'תקציב', lbl_start_date: 'תאריך התחלה', lbl_end_date: 'תאריך סיום',
+    modal_invite: 'הזמן חבר לסביבה', lbl_invite_link: 'קישור הזמנה',
+    btn_copy_link: 'העתק קישור',
+    modal_edit_name: 'שנה שם משתמש', lbl_new_name: 'שם חדש',
+    modal_notif: 'הגדרות התראות', lbl_days_before: 'ימים לפני חיוב',
+    modal_daily: 'תזכורת יומית', lbl_time: 'שעה',
+    modal_cycle: 'מחזור חיוב', lbl_cycle_day: 'יום תחילת החודש',
+    modal_savings: 'יעד חיסכון חודשי',
+    modal_report: '📄 הוצא דוח',
+    lbl_date_range: 'טווח תאריכים', lbl_from_date: 'מתאריך', lbl_to_date: 'עד תאריך',
+    btn_show_report: 'הצג דוח', btn_download_pdf: '📄 הורד PDF', btn_download_excel: '📊 הורד Excel',
+    report_income: 'הכנסות', report_expense: 'הוצאות', report_balance: 'מאזן',
+    report_by_cat: 'לפי קטגוריה', report_all_tx: 'כל הפעולות',
+    report_no_data: 'אין נתונים',
+    // Toasts
+    toast_tx_added: '✅ פעולה נוספה', toast_tx_updated: '✅ פעולה עודכנה', toast_tx_deleted: '✅ פעולה נמחקה',
+    toast_bank_added: '✅ חשבון נוסף', toast_bank_updated: '✅ עודכן', toast_bank_deleted: '✅ נמחק',
+    toast_credit_added: '✅ כרטיס נוסף', toast_credit_updated: '✅ עודכן',
+    toast_fixed_added: '✅ נוסף', toast_fixed_updated: '✅ עודכן',
+    toast_cat_added: '✅ קטגוריה נוספה', toast_saved: '✅ נשמר',
+    toast_link_copied: '✅ קישור הועתק', toast_name_updated: '✅ שם עודכן',
+    toast_project_added: '✅ פרויקט נוסף', toast_project_updated: '✅ עודכן',
+    toast_cycle_updated: '✅ מחזור חיוב עודכן – מיום',
+    toast_savings_updated: '✅ יעד חיסכון עודכן',
+    toast_feedback_sent: '✅ תודה על המשוב!',
+    toast_pdf_generating: '⏳ מייצר PDF...',
+    toast_pdf_done: '✅ PDF הורד', toast_excel_done: '✅ Excel הורד',
+    toast_pdf_error: '❌ שגיאה ביצירת PDF',
+    toast_show_report_first: '⚠️ הצג דוח תחילה',
+    toast_xlsx_not_loaded: '⏳ XLSX לא נטען',
+    // Auth screen
+    auth_title: 'תקציב משפחתי', auth_sub: 'נהל את הכסף שלך בחכמה',
+    auth_google: 'כניסה עם Google', auth_demo: '🚀 כניסת דמו',
+    auth_terms: 'בלחיצה על כניסה אתה מסכים לתנאי השימוש',
+    auth_or: 'או',
+    // Onboarding
+    ob_title: 'איך קוראים לך?', ob_sub: 'בחר שם משתמש שיוצג לשאר חברי הסביבה',
+    ob_label: 'שם משתמש', ob_placeholder: 'לדוגמה: יהודה', ob_btn: 'המשך ←',
+    // Confirm
+    confirm_delete: 'למחוק?', confirm_delete_project: 'למחוק פרויקט?',
   },
   en: {
+    // Nav
     nav_dashboard: 'Dashboard', nav_transactions: 'Transactions', nav_projects: 'Projects',
     nav_analytics: 'Analytics', nav_settings: 'Settings',
+    // Balance card
+    lbl_monthly_balance: 'Monthly Balance',
     lbl_income: 'Income', lbl_expense: 'Expenses', lbl_remaining: 'Remaining',
-    settings_lang_title: 'App Language',
+    // Dashboard sections
+    sec_banks: 'Bank Accounts', sec_credits: 'Credit Cards',
+    sec_upcoming: 'Upcoming Charges', sec_recent: 'Recent Transactions',
+    btn_add: '+ Add', btn_all: 'All',
+    // Analytics
+    ant_expense: 'Expenses', ant_income: 'Income', ant_compare: 'Compare',
+    btn_report: '📄 Export Report',
+    // Projects
+    projects_title: 'Projects & Trips', btn_add_project: '+ Add',
+    // Settings
+    settings_title: 'Settings', settings_lang_title: 'App Language',
+    settings_profile: 'Profile & Workspace',
+    settings_banks: 'Bank Accounts', settings_credits: 'Credit Cards',
+    settings_fixed_expense: 'Fixed Expenses', settings_fixed_income: 'Fixed Income',
+    settings_cats_expense: 'Expense Categories', settings_cats_income: 'Income Categories',
+    settings_billing: 'Billing Cycle', settings_notifications: 'Notifications',
+    settings_projects: 'Projects', settings_help: 'Help',
+    // Settings items
+    s_billing_day: 'Month Start Day', s_savings_goal: 'Monthly Savings Goal',
+    s_notif_charge: 'Charge Notifications', s_notif_daily: 'Daily Reminder',
+    s_help_guide: 'Help Guide', s_help_guide_sub: 'Detailed explanation of all features',
+    s_help_tour: 'Guided Tour', s_help_tour_sub: 'Go through the initial tour again',
+    s_terms: 'Terms of Service', s_terms_sub: 'Read terms of service',
+    s_feedback: 'Send Feedback', s_feedback_sub: 'Help us improve',
+    // Buttons
     btn_add_tx: 'Add Transaction', btn_cancel: 'Cancel', btn_save: 'Save', btn_close: 'Close',
+    btn_delete: 'Delete', btn_edit: 'Edit',
+    btn_add_bank: '+ Add Bank Account', btn_add_credit: '+ Add Card',
+    btn_add_fixed: '+ Add Fixed Expense', btn_add_fixed_income: '+ Add Fixed Income',
+    btn_add_cat: '+ Add Category', btn_add_project_s: '+ Add Project',
+    btn_invite: '+ Invite Partner', btn_change_name: 'Change Name', btn_logout: 'Sign Out',
+    // TX types
     tx_expense: 'Expense', tx_income: 'Income', tx_transfer: 'Transfer',
-    settings_title: 'Settings',
+    // Empty states
+    empty_banks: 'No accounts', empty_credits: 'No cards',
+    empty_fixed_expense: 'No fixed expenses', empty_fixed_income: 'No fixed income',
+    empty_projects: 'No projects', empty_txs: 'No transactions',
+    empty_upcoming: 'No upcoming charges', empty_analytics: 'No data for this month',
+    empty_banks_hint: 'No accounts yet. Add in Settings.',
+    // Dynamic strings
+    workspace_of: 'Workspace of',
+    days_before_charge: 'days before charge',
+    not_set: 'Not set',
+    charged_on: 'Charged on ',
+    due_in_5: 'Due in 5 days:',
+    overdraft: 'Overdraft:',
+    saved_of: 'Saved', goal_of: 'of', goal_suffix: 'goal',
+    per_month: '/month',
+    day_of_month: 'of month',
+    calendar_month: '1 (Calendar month)',
+    annual_compare: 'Annual Comparison –',
+    by_month: 'by Month –',
+    no_data: 'No data',
+    // Search
+    search_placeholder: 'Search by name or amount...',
+    // Modal labels
+    modal_add_tx: 'Add Transaction', modal_edit_tx: 'Edit Transaction',
+    lbl_name: 'Description', lbl_amount: 'Amount', lbl_date: 'Date',
+    lbl_category: 'Category', lbl_payment: 'Payment Method', lbl_note: 'Note (optional)',
+    lbl_bank: 'Bank Account', lbl_from_bank: 'From Account', lbl_to_bank: 'To Account',
+    modal_add_bank: 'Add Bank Account', modal_edit_bank: 'Edit Account',
+    lbl_bank_name: 'Bank Name', lbl_balance: 'Current Balance',
+    modal_add_credit: 'Add Credit Card', modal_edit_credit: 'Edit Card',
+    lbl_card_name: 'Card Name', lbl_charge_day: 'Charge Day', lbl_linked_bank: 'Linked Bank',
+    modal_add_fixed: 'Add Fixed Expense', modal_edit_fixed: 'Edit Fixed Expense',
+    modal_add_fixed_income: 'Add Fixed Income', modal_edit_fixed_income: 'Edit Fixed Income',
+    modal_add_cat: 'Add Category', lbl_cat_name: 'Category Name',
+    modal_add_project: 'Add Project', modal_edit_project: 'Edit Project',
+    lbl_project_name: 'Project Name', lbl_budget: 'Budget', lbl_start_date: 'Start Date', lbl_end_date: 'End Date',
+    modal_invite: 'Invite to Workspace', lbl_invite_link: 'Invite Link',
+    btn_copy_link: 'Copy Link',
+    modal_edit_name: 'Change Username', lbl_new_name: 'New Name',
+    modal_notif: 'Notification Settings', lbl_days_before: 'Days before charge',
+    modal_daily: 'Daily Reminder', lbl_time: 'Time',
+    modal_cycle: 'Billing Cycle', lbl_cycle_day: 'Month start day',
+    modal_savings: 'Monthly Savings Goal',
+    modal_report: '📄 Export Report',
+    lbl_date_range: 'Date Range', lbl_from_date: 'From Date', lbl_to_date: 'To Date',
+    btn_show_report: 'Show Report', btn_download_pdf: '📄 Download PDF', btn_download_excel: '📊 Download Excel',
+    report_income: 'Income', report_expense: 'Expenses', report_balance: 'Balance',
+    report_by_cat: 'By Category', report_all_tx: 'All Transactions',
+    report_no_data: 'No data',
+    // Toasts
+    toast_tx_added: '✅ Transaction added', toast_tx_updated: '✅ Transaction updated', toast_tx_deleted: '✅ Transaction deleted',
+    toast_bank_added: '✅ Account added', toast_bank_updated: '✅ Updated', toast_bank_deleted: '✅ Deleted',
+    toast_credit_added: '✅ Card added', toast_credit_updated: '✅ Updated',
+    toast_fixed_added: '✅ Added', toast_fixed_updated: '✅ Updated',
+    toast_cat_added: '✅ Category added', toast_saved: '✅ Saved',
+    toast_link_copied: '✅ Link copied', toast_name_updated: '✅ Name updated',
+    toast_project_added: '✅ Project added', toast_project_updated: '✅ Updated',
+    toast_cycle_updated: '✅ Billing cycle updated – from day',
+    toast_savings_updated: '✅ Savings goal updated',
+    toast_feedback_sent: '✅ Thank you for your feedback!',
+    toast_pdf_generating: '⏳ Generating PDF...',
+    toast_pdf_done: '✅ PDF downloaded', toast_excel_done: '✅ Excel downloaded',
+    toast_pdf_error: '❌ Error generating PDF',
+    toast_show_report_first: '⚠️ Show report first',
+    toast_xlsx_not_loaded: '⏳ XLSX not loaded',
+    // Auth screen
+    auth_title: 'Family Budget', auth_sub: 'Manage your money smartly',
+    auth_google: 'Sign in with Google', auth_demo: '🚀 Demo Login',
+    auth_terms: 'By signing in you agree to the Terms of Service',
+    auth_or: 'or',
+    // Onboarding
+    ob_title: 'What\'s your name?', ob_sub: 'Choose a username to display to workspace members',
+    ob_label: 'Username', ob_placeholder: 'e.g. John', ob_btn: 'Continue →',
+    // Confirm
+    confirm_delete: 'Delete?', confirm_delete_project: 'Delete project?',
   },
 };
 
@@ -3388,17 +3553,27 @@ function applyLang() {
   const lang = S.lang || 'he';
   const root = document.getElementById('html-root');
   if (root) { root.dir = lang === 'en' ? 'ltr' : 'rtl'; root.lang = lang; }
+  const tr = TRANSLATIONS[lang] || TRANSLATIONS.he;
+  // Update all data-i18n elements
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    const val = (TRANSLATIONS[lang] || TRANSLATIONS.he)[key];
-    if (val !== undefined) el.textContent = val;
+    if (tr[key] !== undefined) el.textContent = tr[key];
   });
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (tr[key] !== undefined) el.placeholder = tr[key];
+  });
+  // Re-render dynamic content when app is active
+  if (S.user) {
+    render();
+    renderSettings();
+  }
 }
 
 function setLang(lang) {
   S.lang = lang;
   applyLang();
-  renderSettings();
   fbSave();
   toast(lang === 'en' ? '🌐 Language: English' : '🌐 שפה: עברית', 'success');
 }
@@ -3470,11 +3645,11 @@ function buildReportHTML(data) {
 }
 
 async function downloadReportPDF() {
-  if (!_reportData) { toast('⚠️ הצג דוח תחילה','warn'); return; }
+  if (!_reportData) { toast(t('toast_show_report_first'),'warn'); return; }
   const { jsPDF } = window.jspdf || {};
-  if (!jsPDF) { toast('⏳ jsPDF לא נטען','warn'); return; }
-  if (typeof html2canvas === 'undefined') { toast('⏳ html2canvas לא נטען','warn'); return; }
-  toast('⏳ מייצר PDF...','info');
+  if (!jsPDF) { toast('⏳ jsPDF not loaded','warn'); return; }
+  if (typeof html2canvas === 'undefined') { toast('⏳ html2canvas not loaded','warn'); return; }
+  toast(t('toast_pdf_generating'),'info');
   const container = document.createElement('div');
   container.style.cssText = 'position:fixed;top:-9999px;right:-9999px;z-index:-1;';
   container.innerHTML = buildReportHTML();
@@ -3497,14 +3672,17 @@ async function downloadReportPDF() {
       heightLeft -= pageH - 20;
     }
     pdf.save('budget-report-' + _reportData.fromStr + '.pdf');
-    toast('✅ PDF הורד','success');
-  } catch(e) { console.error(e); toast('❌ שגיאה ביצירת PDF','warn'); }
+    toast(t('toast_pdf_done'),'success');
+  } catch(e) { console.error(e); toast(t('toast_pdf_error'),'warn'); }
   finally { document.body.removeChild(container); }
 }
 
 function downloadReportExcel() {
-  if (!_reportData) { toast('⚠️ הצג דוח תחילה','warn'); return; }
-  if (typeof XLSX === 'undefined') { toast('⏳ XLSX לא נטען','warn'); return; }
+  if (!_reportData) { toast(t('toast_show_report_first'),'warn'); return; }
+  const XLSXLib = window.XLSX || window.XLSXStyle;
+  if (!XLSXLib) { toast(t('toast_xlsx_not_loaded'),'warn'); console.error('XLSX library not found. Check CDN.'); return; }
+  // Use XLSXLib alias
+  if (!window.XLSX && window.XLSXStyle) window.XLSX = window.XLSXStyle;
   const d = _reportData;
   const bal = d.income - d.expense;
   const wb = XLSX.utils.book_new();
@@ -3558,8 +3736,10 @@ function downloadReportExcel() {
     {s:{r:1,c:0}, e:{r:1,c:4}},
   ];
   XLSX.utils.book_append_sheet(wb, ws, 'דוח');
-  XLSX.writeFile(wb, 'budget-report-' + d.fromStr + '.xlsx');
-  toast('✅ Excel הורד','success');
+  try {
+    XLSX.writeFile(wb, 'budget-report-' + d.fromStr + '.xlsx');
+    toast(t('toast_excel_done'),'success');
+  } catch(e) { console.error('Excel write error:', e); toast('❌ Excel error: ' + e.message, 'warn'); }
 }
 
 // ═══════════════════════════════════════════════
